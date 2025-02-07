@@ -326,7 +326,7 @@ if check_password():
                     "publisher": ", ".join([pub["name"] for pub in book_info.get("publishers", [])]),
                     "published_date": book_info.get("publish_date", "N/A"),
                     "page_count": book_info.get("number_of_pages", "N/A"),
-                    "categories": ", ".join(book_info.get("subjects", ["N/A"])),
+                    "categories": ", ".join(book_info.get("subjects", [])) if isinstance(book_info.get("subjects"), list) else book_info.get("subjects", "N/A"),
                     "language": book_info.get("languages", [{"key": "N/A"}])[0]["key"].split("/")[-1]
                 }
 
