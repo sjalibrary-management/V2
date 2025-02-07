@@ -299,94 +299,94 @@ if check_password():
         return None, "Book not found"
         
     class BookInventory:
-    def __init__(self):
-        self.api_base_url = "https://openlibrary.org/api/books"
-
-    def fetch_book_details(self, isbn: str):
-        """Fetch book details from Open Library API using ISBN"""
-        try:
-            params = {
-                "bibkeys": f"ISBN:{isbn}",
-                "format": "json",
-                "jscmd": "data"
-            }
-            response = requests.get(self.api_base_url, params=params)
-            response.raise_for_status()
-            data = response.json()
-
-            book_key = f"ISBN:{isbn}"
-            if book_key not in data:
-                return None
-
-            book_info = data[book_key]
-
-            # Improved subject/category handling
-            subjects = book_info.get("subjects", [])
-            if subjects:
-                if isinstance(subjects, list):
-                    # Handle both string and dict subjects
-                    category_names = []
-                    for subject in subjects:
-                        if isinstance(subject, dict):
-                            if "name" in subject:
-                                category_names.append(subject["name"])
-                        elif isinstance(subject, str):
-                            category_names.append(subject)
-                    categories = ", ".join(category_names) if category_names else "N/A"
-                elif isinstance(subjects, str):
-                    categories = subjects
+        def __init__(self):
+            self.api_base_url = "https://openlibrary.org/api/books"
+    
+        def fetch_book_details(self, isbn: str):
+            """Fetch book details from Open Library API using ISBN"""
+            try:
+                params = {
+                    "bibkeys": f"ISBN:{isbn}",
+                    "format": "json",
+                    "jscmd": "data"
+                }
+                response = requests.get(self.api_base_url, params=params)
+                response.raise_for_status()
+                data = response.json()
+    
+                book_key = f"ISBN:{isbn}"
+                if book_key not in data:
+                    return None
+    
+                book_info = data[book_key]
+    
+                # Improved subject/category handling
+                subjects = book_info.get("subjects", [])
+                if subjects:
+                    if isinstance(subjects, list):
+                        # Handle both string and dict subjects
+                        category_names = []
+                        for subject in subjects:
+                            if isinstance(subject, dict):
+                                if "name" in subject:
+                                    category_names.append(subject["name"])
+                            elif isinstance(subject, str):
+                                category_names.append(subject)
+                        categories = ", ".join(category_names) if category_names else "N/A"
+                    elif isinstance(subjects, str):
+                        categories = subjects
+                    else:
+                        categories = "N/A"
                 else:
                     categories = "N/A"
-            else:
-                categories = "N/A"
-
-            # Improved publisher handling
-            publishers = book_info.get("publishers", [])
-            if publishers:
-                publisher_names = []
-                for pub in publishers:
-                    if isinstance(pub, dict) and "name" in pub:
-                        publisher_names.append(pub["name"])
-                    elif isinstance(pub, str):
-                        publisher_names.append(pub)
-                publisher = ", ".join(publisher_names) if publisher_names else "N/A"
-            else:
-                publisher = "N/A"
-
-            # Improved language handling
-            languages = book_info.get("languages", [])
-            if languages:
-                if isinstance(languages, list) and languages:
-                    first_lang = languages[0]
-                    if isinstance(first_lang, dict) and "key" in first_lang:
-                        language = first_lang["key"].split("/")[-1].upper()
-                    else:
-                        language = str(first_lang).upper()
+    
+                # Improved publisher handling
+                publishers = book_info.get("publishers", [])
+                if publishers:
+                    publisher_names = []
+                    for pub in publishers:
+                        if isinstance(pub, dict) and "name" in pub:
+                            publisher_names.append(pub["name"])
+                        elif isinstance(pub, str):
+                            publisher_names.append(pub)
+                    publisher = ", ".join(publisher_names) if publisher_names else "N/A"
                 else:
-                    language = str(languages).upper()
-            else:
-                language = "N/A"
-
-            # Standardized book format with proper error handling
-            book_details = {
-                "isbn": isbn,
-                "title": book_info.get("title", "N/A"),
-                "authors": ", ".join([author.get("name", "N/A") for author in book_info.get("authors", [])]) or "N/A",
-                "publisher": publisher,
-                "published_date": book_info.get("publish_date", "N/A"),
-                "page_count": book_info.get("number_of_pages", 0) or 0,  # Convert None to 0
-                "categories": categories,
-                "language": language
-            }
-
-            return book_details
-
-        except requests.RequestException as e:
-            st.error(f"Error fetching book details: {str(e)}")
-            return None
-        except Exception as e:
-            st.error(f"Unexpected error processing book details: {str(e)}")
-            return None
+                    publisher = "N/A"
+    
+                # Improved language handling
+                languages = book_info.get("languages", [])
+                if languages:
+                    if isinstance(languages, list) and languages:
+                        first_lang = languages[0]
+                        if isinstance(first_lang, dict) and "key" in first_lang:
+                            language = first_lang["key"].split("/")[-1].upper()
+                        else:
+                            language = str(first_lang).upper()
+                    else:
+                        language = str(languages).upper()
+                else:
+                    language = "N/A"
+    
+                # Standardized book format with proper error handling
+                book_details = {
+                    "isbn": isbn,
+                    "title": book_info.get("title", "N/A"),
+                    "authors": ", ".join([author.get("name", "N/A") for author in book_info.get("authors", [])]) or "N/A",
+                    "publisher": publisher,
+                    "published_date": book_info.get("publish_date", "N/A"),
+                    "page_count": book_info.get("number_of_pages", 0) or 0,  # Convert None to 0
+                    "categories": categories,
+                    "language": language
+                }
+    
+                return book_details
+    
+            except requests.RequestException as e:
+                st.error(f"Error fetching book details: {str(e)}")
+                return None
+            except Exception as e:
+                st.error(f"Unexpected error processing book details: {str(e)}")
+                return None
 
 
     def dashboard():
