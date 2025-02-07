@@ -319,16 +319,6 @@ if check_password():
                 if book_key not in data:
                     return None
 
-                book_info = data[book_key]
-
-                # Handle subjects/categories safely
-                subjects = book_info.get("subjects")
-                if isinstance(subjects, list):
-                    categories = ", ".join([s["name"] if isinstance(s, dict) and "name" in s else str(s) for s in subjects])
-                elif isinstance(subjects, str):
-                    categories = subjects
-                else:
-                    categories = "N/A"
 
                 # Standardized book format
                 book_details = {
@@ -338,7 +328,7 @@ if check_password():
                     "publisher": ", ".join([pub["name"] for pub in book_info.get("publishers", [])]),
                     "published_date": book_info.get("publish_date", "N/A"),
                     "page_count": book_info.get("number_of_pages", "N/A"),
-                    "categories": categories,  # Fixed category handling
+                    "categories": "NA",  # Fixed category handling
                     "language": book_info.get("languages", [{"key": "N/A"}])[0]["key"].split("/")[-1]
                 }
 
