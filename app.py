@@ -1029,16 +1029,6 @@ if check_password():
             book_categories = df_book_categories.groupby('Category')['Quantity'].sum()
             df_cat = book_categories.reset_index()
 
-            transaction_data = pd.read_excel('Transaction.xlsx')
-            transaction_summary = transaction_data.groupby(['Transaction Date', 'Transaction Type']).size().reset_index(name='Transaction Count')
-
-            # Pivot the table so that each transaction type is a separate column
-            transaction_pivot = transaction_summary.pivot(index='Transaction Date', columns='Transaction Type', values='Transaction Count').reset_index()
-
-            # Fill missing values with 0 (in case there are days with no "Check In" or "Check Out" transactions)
-            transaction_pivot = transaction_pivot.fillna(0)
-
-
 
           
             col1, col2, col3 = st.columns(3)
