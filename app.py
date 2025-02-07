@@ -297,39 +297,40 @@ if check_password():
         return None, "Book not found"
 
     class BookInventory:
-            def __init__(self):
-                self.api_base_url = "https://www.googleapis.com/books/v1/volumes"
+        def __init__(self):
+            self.api_base_url = "https://www.googleapis.com/books/v1/volumes"
+            self.api_key = "AIzaSyCWObQ2BqZF1rhn82aKD2s1n9JxVMkCTNg"  
+        def fetch_book_details(self, isbn: str):
+            """Fetch book details from Google Books API using ISBN"""
+            try:
+                query = f"isbn:{isbn}"
+                params = {"q": query, "key": self.api_key}  
+                response = requests.get(self.api_base_url, params=params)
+                response.raise_for_status()
+                data = response.json()
 
-            def fetch_book_details(self, isbn: str):
-                """ Fetch book details from Google Books API using ISBN """
-                try:
-                    query = f"isbn:{isbn}"
-                    response = requests.get(self.api_base_url, params={"q": query})
-                    response.raise_for_status()
-                    data = response.json()
-
-                    if data.get("totalItems", 0) == 0:
-                        return None
-
-                    book_info = data["items"][0]["volumeInfo"]
-
-                        # Standardized book format
-                    book_details = {
-                        "isbn": isbn,
-                        "title": book_info.get("title", "N/A"),
-                        "authors": ", ".join(book_info.get("authors", ["N/A"])),
-                        "publisher": book_info.get("publisher", "N/A"),
-                        "published_date": book_info.get("publishedDate", "N/A"),
-                        "page_count": book_info.get("pageCount", "N/A"),
-                        "categories": ", ".join(book_info.get("categories", ["N/A"])),
-                        "language": book_info.get("language", "N/A")
-                        }
-
-                    return book_details
-
-                except requests.RequestException as e:
-                    st.error(f"Error fetching book details: {str(e)}")
+                if data.get("totalItems", 0) == 0:
                     return None
+
+                book_info = data["items"][0]["volumeInfo"]
+
+                # Standardized book format
+                book_details = {
+                    "isbn": isbn,
+                    "title": book_info.get("title", "N/A"),
+                    "authors": ", ".join(book_info.get("authors", ["N/A"])),
+                    "publisher": book_info.get("publisher", "N/A"),
+                    "published_date": book_info.get("publishedDate", "N/A"),
+                    "page_count": book_info.get("pageCount", "N/A"),
+                    "categories": ", ".join(book_info.get("categories", ["N/A"])),
+                    "language": book_info.get("language", "N/A"),
+                }
+
+                return book_details
+
+            except requests.RequestException as e:
+                st.error(f"Error fetching book details: {str(e)}")
+                return None
 
 
     def dashboard():
