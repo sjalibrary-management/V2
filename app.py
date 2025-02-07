@@ -298,9 +298,10 @@ if check_password():
             return df, "Book deleted successfully"
         return None, "Book not found"
     class BookInventory:
+      
         def __init__(self):
             self.api_base_url = "https://openlibrary.org/api/books"
-    
+            
         def fetch_book_details(self, isbn: str):
             """Fetch book details from Open Library API using ISBN"""
             try:
@@ -312,27 +313,26 @@ if check_password():
                 response = requests.get(self.api_base_url, params=params)
                 response.raise_for_status()
                 data = response.json()
-    
                 book_key = f"ISBN:{isbn}"
                 if book_key not in data:
                     return None
-    
                 book_info = data[book_key]
-    
-                # Get first subject/category if available
+                
+                # Simplified subject handling - only get first subject
                 subjects = book_info.get("subjects", [])
-                if isinstance(subjects, list) and subjects:
-                    first_subject = subjects[0]
-                    if isinstance(first_subject, dict) and "name" in first_subject:
-                        categories = first_subject["name"]
-                    elif isinstance(first_subject, str):
-                        categories = first_subject
+                if subjects:
+                    if isinstance(subjects, list):
+                        first_subject = subjects[0]
+                        if isinstance(first_subject, dict):
+                            category = first_subject.get("name", "N/A")
+                        else:
+                            category = str(first_subject)
                     else:
-                        categories = "N/A"
+                        category = str(subjects)
                 else:
-                    categories = "N/A"
-    
-                # Improved publisher handling
+                    category = "N/A"
+                    
+                # Publisher handling
                 publishers = book_info.get("publishers", [])
                 if publishers:
                     publisher_names = []
@@ -344,8 +344,8 @@ if check_password():
                     publisher = ", ".join(publisher_names) if publisher_names else "N/A"
                 else:
                     publisher = "N/A"
-    
-                # Improved language handling
+                    
+                # Language handling
                 languages = book_info.get("languages", [])
                 if languages:
                     if isinstance(languages, list) and languages:
@@ -358,30 +358,30 @@ if check_password():
                         language = str(languages).upper()
                 else:
                     language = "N/A"
-    
-                # Standardized book format with proper error handling
+                    
+                # Book details with single category
                 book_details = {
                     "isbn": isbn,
                     "title": book_info.get("title", "N/A"),
                     "authors": ", ".join([author.get("name", "N/A") for author in book_info.get("authors", [])]) or "N/A",
                     "publisher": publisher,
                     "published_date": book_info.get("publish_date", "N/A"),
-                    "page_count": book_info.get("number_of_pages", 0) or 0,  # Convert None to 0
-                    "categories": categories,  # Only first subject
+                    "page_count": book_info.get("number_of_pages", 0) or 0,
+                    "category": category,  # Changed from categories to category
                     "language": language
                 }
-    
                 return book_details
-    
+                
             except requests.RequestException as e:
                 st.error(f"Error fetching book details: {str(e)}")
                 return None
             except Exception as e:
                 st.error(f"Unexpected error processing book details: {str(e)}")
                 return None
-     
-   
-
+    
+         
+       
+    
 
     def dashboard():
         st.sidebar.image("images/logo.png")           
