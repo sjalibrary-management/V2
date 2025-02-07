@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from streamlit_option_menu import option_menu
-from dotenv import load_dotenv
 from datetime import date as dt
 import os
 from pathlib import Path
@@ -297,41 +296,38 @@ if check_password():
             return df, "Book deleted successfully"
         return None, "Book not found"
 
-    class BookInventory:
+ class BookInventory:
         def __init__(self):
-            load_dotenv()  
-            
-            self.api_key = st.secrets["GOOGLE_BOOKS_API_KEY"] if "GOOGLE_BOOKS_API_KEY" in st.secrets else os.getenv("GOOGLE_BOOKS_API_KEY")
-            self.api_base_url = "https://www.googleapis.com/books/v1/volumes"
-            
-            if not self.api_key:
-                raise ValueError("Google Books API key not found") 
-
+            self.api_base_url = "https://openlibrary.org/api/books"
 
         def fetch_book_details(self, isbn: str):
-            """Fetch book details from Google Books API using ISBN"""
+            """Fetch book details from Open Library API using ISBN"""
             try:
-                query = f"isbn:{isbn}"
-                params = {"q": query, "key": self.api_key}  
+                params = {
+                    "bibkeys": f"ISBN:{isbn}",
+                    "format": "json",
+                    "jscmd": "data"
+                }
                 response = requests.get(self.api_base_url, params=params)
                 response.raise_for_status()
                 data = response.json()
 
-                if data.get("totalItems", 0) == 0:
+                book_key = f"ISBN:{isbn}"
+                if book_key not in data:
                     return None
 
-                book_info = data["items"][0]["volumeInfo"]
+                book_info = data[book_key]
 
                 # Standardized book format
                 book_details = {
                     "isbn": isbn,
                     "title": book_info.get("title", "N/A"),
-                    "authors": ", ".join(book_info.get("authors", ["N/A"])),
-                    "publisher": book_info.get("publisher", "N/A"),
-                    "published_date": book_info.get("publishedDate", "N/A"),
-                    "page_count": book_info.get("pageCount", "N/A"),
-                    "categories": ", ".join(book_info.get("categories", ["N/A"])),
-                    "language": book_info.get("language", "N/A"),
+                    "authors": ", ".join([author["name"] for author in book_info.get("authors", [])]),
+                    "publisher": ", ".join([pub["name"] for pub in book_info.get("publishers", [])]),
+                    "published_date": book_info.get("publish_date", "N/A"),
+                    "page_count": book_info.get("number_of_pages", "N/A"),
+                    "categories": ", ".join(book_info.get("subjects", ["N/A"])),
+                    "language": book_info.get("languages", [{"key": "N/A"}])[0]["key"].split("/")[-1]
                 }
 
                 return book_details
