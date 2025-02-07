@@ -298,11 +298,10 @@ if check_password():
             return df, "Book deleted successfully"
         return None, "Book not found"
 
-
     class BookInventory:
         def __init__(self):
             self.api_base_url = "https://openlibrary.org/api/books"
-
+    
         def fetch_book_details(self, isbn: str):
             """Fetch book details from Open Library API using ISBN"""
             try:
@@ -314,12 +313,24 @@ if check_password():
                 response = requests.get(self.api_base_url, params=params)
                 response.raise_for_status()
                 data = response.json()
-
+    
                 book_key = f"ISBN:{isbn}"
                 if book_key not in data:
                     return None
-
-
+    
+                book_info = data[book_key]
+    
+                # Handle subjects/categories safely
+                subjects = book_info.get("subjects")
+                if isinstance(subjects, list):
+                    categories = ", ".join(
+                        [s["name"] if isinstance(s, dict) and "name" in s else s for s in subjects if isinstance(s, (str, dict))]
+                    )
+                elif isinstance(subjects, str):
+                    categories = subjects
+                else:
+                    categories = "N/A"
+    
                 # Standardized book format
                 book_details = {
                     "isbn": isbn,
@@ -328,16 +339,15 @@ if check_password():
                     "publisher": ", ".join([pub["name"] for pub in book_info.get("publishers", [])]),
                     "published_date": book_info.get("publish_date", "N/A"),
                     "page_count": book_info.get("number_of_pages", "N/A"),
-                    "categories": "NA",  # Fixed category handling
+                    "categories": categories,  # Fixed category handling
                     "language": book_info.get("languages", [{"key": "N/A"}])[0]["key"].split("/")[-1]
                 }
-
+    
                 return book_details
-
+    
             except requests.RequestException as e:
                 st.error(f"Error fetching book details: {str(e)}")
                 return None
-
 
 
     def dashboard():
