@@ -1098,20 +1098,16 @@ if check_password():
             st.markdown('')
 
             st.markdown('----')
-            if not df_cat.empty:
-                chart_type = st.radio("Choose Data:", ("Book Category", "Transaction History"))    
-
-                if chart_type == "Book Category":
-                    # Create a 2D bar chart
-                    fig = px.bar(df_cat, 
+            if not df_cat.empty:    
+                fig = px.bar(df_cat, 
                                 x='Category',  
                                 y='Quantity',  
                                 color='Category',  
                                 template='seaborn'
                     )
 
-                    # Update layout for 2D bar chart
-                    fig.update_layout(
+                    
+                fig.update_layout(
                         plot_bgcolor='rgba(230, 26, 26, 0)',  
                         paper_bgcolor='rgba(255, 255, 255, 0)', 
                         title='',
@@ -1132,33 +1128,7 @@ if check_password():
                         )
                     )
 
-                elif chart_type == "Transaction History":
-                    fig = px.line(transaction_pivot, 
-                                x='Transaction Date',  
-                                y=['Check In', 'Check Out'],  
-                                labels={'Transaction Date': 'Date', 'value': 'Number of Transactions'},
-                                template='plotly'
-                    )
-                    fig.update_traces(line=dict(color='red'), selector=dict(name='Check In'))  
-                    fig.update_traces(line=dict(color='#162938'), selector=dict(name='Check Out')) 
-
-
-                    # Update layout for the line chart to remove title
-                    fig.update_layout(
-                        plot_bgcolor='rgba(0, 0, 0, 0)',  
-                        paper_bgcolor='rgba(178, 206, 241, 0.5)', 
-                        title="",  
-                        xaxis=dict(
-                            title='Date',
-                            tickfont=dict(color='white'),
-                            tickangle=45
-                        ),
-                        yaxis=dict(
-                            title='',
-                            tickfont=dict(color='white')
-                        )
-                    )
-
+                
 
                 st.plotly_chart(fig, use_container_width=True)
                     
