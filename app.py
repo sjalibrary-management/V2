@@ -12,6 +12,8 @@ import requests
 
 st.set_page_config(layout="wide")
 
+
+
 st.markdown("""
     <style>
         header {visibility: hidden;}      
@@ -296,6 +298,7 @@ if check_password():
             return df, "Book deleted successfully"
         return None, "Book not found"
 
+
     class BookInventory:
         def __init__(self):
             self.api_base_url = "https://openlibrary.org/api/books"
@@ -318,6 +321,15 @@ if check_password():
 
                 book_info = data[book_key]
 
+                # Handle subjects/categories safely
+                subjects = book_info.get("subjects")
+                if isinstance(subjects, list):
+                    categories = ", ".join([s["name"] if isinstance(s, dict) and "name" in s else str(s) for s in subjects])
+                elif isinstance(subjects, str):
+                    categories = subjects
+                else:
+                    categories = "N/A"
+
                 # Standardized book format
                 book_details = {
                     "isbn": isbn,
@@ -326,7 +338,7 @@ if check_password():
                     "publisher": ", ".join([pub["name"] for pub in book_info.get("publishers", [])]),
                     "published_date": book_info.get("publish_date", "N/A"),
                     "page_count": book_info.get("number_of_pages", "N/A"),
-                    "categories": ", ".join(book_info.get("subjects", [])) if isinstance(book_info.get("subjects"), list) else book_info.get("subjects", "N/A"),
+                    "categories": categories,  # Fixed category handling
                     "language": book_info.get("languages", [{"key": "N/A"}])[0]["key"].split("/")[-1]
                 }
 
@@ -335,6 +347,8 @@ if check_password():
             except requests.RequestException as e:
                 st.error(f"Error fetching book details: {str(e)}")
                 return None
+
+
 
     def dashboard():
         st.sidebar.image("images/logo.png")           
