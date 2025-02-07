@@ -297,7 +297,6 @@ if check_password():
             save_inventory(df)
             return df, "Book deleted successfully"
         return None, "Book not found"
-        
     class BookInventory:
         def __init__(self):
             self.api_base_url = "https://openlibrary.org/api/books"
@@ -320,21 +319,14 @@ if check_password():
     
                 book_info = data[book_key]
     
-                # Improved subject/category handling
+                # Get first subject/category if available
                 subjects = book_info.get("subjects", [])
-                if subjects:
-                    if isinstance(subjects, list):
-                        # Handle both string and dict subjects
-                        category_names = []
-                        for subject in subjects:
-                            if isinstance(subject, dict):
-                                if "name" in subject:
-                                    category_names.append(subject["name"])
-                            elif isinstance(subject, str):
-                                category_names.append(subject)
-                        categories = ", ".join(category_names) if category_names else "N/A"
-                    elif isinstance(subjects, str):
-                        categories = subjects
+                if isinstance(subjects, list) and subjects:
+                    first_subject = subjects[0]
+                    if isinstance(first_subject, dict) and "name" in first_subject:
+                        categories = first_subject["name"]
+                    elif isinstance(first_subject, str):
+                        categories = first_subject
                     else:
                         categories = "N/A"
                 else:
@@ -375,7 +367,7 @@ if check_password():
                     "publisher": publisher,
                     "published_date": book_info.get("publish_date", "N/A"),
                     "page_count": book_info.get("number_of_pages", 0) or 0,  # Convert None to 0
-                    "categories": categories,
+                    "categories": categories,  # Only first subject
                     "language": language
                 }
     
@@ -387,6 +379,8 @@ if check_password():
             except Exception as e:
                 st.error(f"Unexpected error processing book details: {str(e)}")
                 return None
+     
+   
 
 
     def dashboard():
