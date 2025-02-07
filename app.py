@@ -296,7 +296,7 @@ if check_password():
             return df, "Book deleted successfully"
         return None, "Book not found"
 
- class BookInventory:
+    class BookInventory:
         def __init__(self):
             self.api_base_url = "https://openlibrary.org/api/books"
 
