@@ -296,41 +296,125 @@ if check_password():
             return df, "Book deleted successfully"
         return None, "Book not found"
 
-    class BookInventory:
-        def __init__(self):
-            self.api_base_url = "https://www.googleapis.com/books/v1/volumes"
-            self.api_key = "AIzaSyCWObQ2BqZF1rhn82aKD2s1n9JxVMkCTNg"  
-        def fetch_book_details(self, isbn: str):
-            """Fetch book details from Google Books API using ISBN"""
-            try:
-                query = f"isbn:{isbn}"
-                params = {"q": query, "key": self.api_key}  
-                response = requests.get(self.api_base_url, params=params)
+class BookInventory:
+    def __init__(self):
+        self.api_base_url = "https://www.googleapis.com/books/v1/volumes"
+        self.api_key = "AIzaSyCWObQ2BqZF1rhn82aKD2s1n9JxVMkCTNg"  
+        
+    def fetch_book_details(self, isbn: str):
+        """
+        Fetch book details from Google Books API using ISBN with enhanced error handling
+        """
+        try:
+            # Clean ISBN input
+            isbn = isbn.replace("-", "").strip()
+            
+            # First try with ISBN-13
+            query = f"isbn:{isbn}"
+            params = {
+                "q": query,
+                "key": self.api_key,
+                "maxResults": 1
+            }
+            
+            response = requests.get(self.api_base_url, params=params, timeout=10)
+            
+            # Handle different HTTP status codes
+            if response.status_code == 403:
+                st.error("API access forbidden. Please check your API key configuration.")
+                return None
+            elif response.status_code == 429:
+                st.error("Too many requests. Please try again later.")
+                return None
+            elif response.status_code != 200:
+                st.error(f"API request failed with status code: {response.status_code}")
+                return None
+                
+            response.raise_for_status()
+            data = response.json()
+
+            if data.get("totalItems", 0) == 0 and len(isbn) == 13:
+                # Try with ISBN-10 if ISBN-13 fails
+                isbn_10 = isbn[3:] if isbn.startswith("978") else isbn
+                query = f"isbn:{isbn_10}"
+                params["q"] = query
+                response = requests.get(self.api_base_url, params=params, timeout=10)
                 response.raise_for_status()
                 data = response.json()
 
-                if data.get("totalItems", 0) == 0:
-                    return None
-
-                book_info = data["items"][0]["volumeInfo"]
-
-                # Standardized book format
-                book_details = {
-                    "isbn": isbn,
-                    "title": book_info.get("title", "N/A"),
-                    "authors": ", ".join(book_info.get("authors", ["N/A"])),
-                    "publisher": book_info.get("publisher", "N/A"),
-                    "published_date": book_info.get("publishedDate", "N/A"),
-                    "page_count": book_info.get("pageCount", "N/A"),
-                    "categories": ", ".join(book_info.get("categories", ["N/A"])),
-                    "language": book_info.get("language", "N/A"),
-                }
-
-                return book_details
-
-            except requests.RequestException as e:
-                st.error(f"Error fetching book details: {str(e)}")
+            if data.get("totalItems", 0) == 0:
+                st.warning(f"No book found with ISBN: {isbn}")
                 return None
+
+            book_info = data["items"][0]["volumeInfo"]
+            
+            # Extract and clean book details with default values
+            book_details = {
+                "isbn": isbn,
+                "title": book_info.get("title", "Unknown Title"),
+                "authors": ", ".join(book_info.get("authors", ["Unknown Author"])),
+                "publisher": book_info.get("publisher", "Unknown Publisher"),
+                "published_date": book_info.get("publishedDate", "Unknown Date"),
+                "page_count": book_info.get("pageCount", 0),
+                "categories": ", ".join(book_info.get("categories", ["Uncategorized"])),
+                "language": book_info.get("language", "Unknown"),
+            }
+
+            return book_details
+
+        except requests.exceptions.Timeout:
+            st.error("Request timed out. Please try again.")
+            return None
+        except requests.exceptions.RequestException as e:
+            st.error(f"Error fetching book details: {str(e)}")
+            return None
+        except (KeyError, IndexError) as e:
+            st.error(f"Error parsing book data: {str(e)}")
+            return None
+        except Exception as e:
+            st.error(f"Unexpected error: {str(e)}")
+            return None
+
+    def validate_isbn(self, isbn: str) -> bool:
+        """
+        Validate ISBN format
+        """
+        # Remove hyphens and spaces
+        isbn = isbn.replace("-", "").replace(" ", "")
+        
+        if len(isbn) == 10:
+            # ISBN-10 validation
+            if not isbn[:-1].isdigit() and isbn[-1].upper() != 'X':
+                return False
+            
+            sum = 0
+            for i in range(9):
+                sum += int(isbn[i]) * (10 - i)
+            
+            last = isbn[-1].upper()
+            if last == 'X':
+                sum += 10
+            else:
+                sum += int(last)
+                
+            return sum % 11 == 0
+            
+        elif len(isbn) == 13:
+            # ISBN-13 validation
+            if not isbn.isdigit():
+                return False
+                
+            sum = 0
+            for i in range(12):
+                if i % 2 == 0:
+                    sum += int(isbn[i])
+                else:
+                    sum += int(isbn[i]) * 3
+                    
+            check = (10 - (sum % 10)) % 10
+            return check == int(isbn[-1])
+            
+        return False
 
 
     def dashboard():
