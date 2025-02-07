@@ -324,13 +324,13 @@ if check_password():
                     if isinstance(subjects, list):
                         first_subject = subjects[0]
                         if isinstance(first_subject, dict):
-                            category = first_subject.get("name", "N/A")
+                            categories = first_subject.get("name", "N/A")
                         else:
-                            category = str(first_subject)
+                            categories = str(first_subject)
                     else:
-                        category = str(subjects)
+                        categories = str(subjects)
                 else:
-                    category = "N/A"
+                    categories = "N/A"
                     
                 # Publisher handling
                 publishers = book_info.get("publishers", [])
@@ -359,7 +359,7 @@ if check_password():
                 else:
                     language = "N/A"
                     
-                # Book details with single category
+               
                 book_details = {
                     "isbn": isbn,
                     "title": book_info.get("title", "N/A"),
@@ -367,7 +367,7 @@ if check_password():
                     "publisher": publisher,
                     "published_date": book_info.get("publish_date", "N/A"),
                     "page_count": book_info.get("number_of_pages", 0) or 0,
-                    "category": category,  # Changed from categories to category
+                    "categories": categories, 
                     "language": language
                 }
                 return book_details
