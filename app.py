@@ -754,7 +754,7 @@ if check_password():
                                     "publisher": book_details["publisher"],
                                     "published_date": book_details["published_date"],
                                     "page_count": book_details["page_count"],
-                                    "categories": book_details["categories"],
+                                    "categories": book_details["category"],
                                     "language": book_details["language"],
                                     "quantity": quantity
                                 }
