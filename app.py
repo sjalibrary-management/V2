@@ -537,7 +537,7 @@ if check_password():
                                             updated_df = edit_inventory_item(df, selected_isbn, updates)
                                             if updated_df is not None:
                                                 st.success('Book updated successfully!')
-                                                st.rerun()  
+                                                
                                             else:
                                                 st.error('Failed to update book.')
 
