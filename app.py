@@ -429,7 +429,7 @@ if check_password():
                 """,
                 unsafe_allow_html=True
             )
-        #-------------------------------------------------------- INVENTORY ----------------------------------------------------------------------
+        #-------------------------------------------------------- INVENTORY ----------------------------------------------------------------------#
         if selected == 'Inventory':
             tab = st.tabs(['Inventory','Edit Inventory', 'View Inventory', 'Download Inventory', 'Add Manually'])
             with tab[3]:
@@ -454,7 +454,7 @@ if check_password():
                         search_results = df[mask]
                         
                         if not search_results.empty:
-                            st.dataframe(search_results[['Book Title', 'Author', 'ISBN', 'Quantity', 'Category', 'No Pages', 'Publishing Date', 'Publisher', 'Language']], 
+                            st.dataframe(search_results[['Book Title', 'Author', 'ISBN', 'Quantity', 'Type','Category', 'No Pages', 'Publishing Date', 'Publisher', 'Language']], 
                                     use_container_width=True)
                             
                             isbn_list = search_results['ISBN'].tolist()
@@ -487,6 +487,7 @@ if check_password():
                                         )
                                         new_title = st.text_input('Book Title', value=selected_book['Book Title'])
                                         new_author = st.text_input('Author', value=selected_book['Author'])
+                                        new_category = st.text_input('Category', value=selected_book['Category'])
                                         col1, col2 = st.columns(2)
                                         with col1:
                                             new_publisher = st.text_input('Publisher', value=selected_book['Publisher'])
@@ -505,7 +506,12 @@ if check_password():
                                                         value=int(selected_book['No Pages'] if pd.notna(selected_book['No Pages']) else 1)
                                                 )                                        
                                         with col2:
-                                            new_category = st.text_input('Category', value=selected_book['Category'])
+                                            type_options = ['Textbooks', 'Journal', 'Research Paper', 'Magazine', 'Brochure', 'Literature']
+                                            type_index = type_options.index(selected_book['Type']) if selected_book['Type'] in type_options else 0
+                                            new_type = st.selectbox('Type', options=type_options, index=type_index)
+            
+                                        
+                                        
                                             sub_col1, sub_col2 = st.columns(2)
                                             with sub_col1:
                                                 new_publishing_date = st.text_input('Publishing Date', 
@@ -520,6 +526,7 @@ if check_password():
                                                 'Book Title': new_title,
                                                 'Author': new_author,
                                                 'Quantity': new_quantity,
+                                                'Type': new_type,
                                                 'Category': new_category,
                                                 'No Pages': new_no_pages,
                                                 'Publishing Date': new_publishing_date,
@@ -565,8 +572,8 @@ if check_password():
 
                         active_books = df[df['Status'] == 'Active']
                         
-                        ft_col_list_active = ['Quantity', 'Book Title', 'Author', 'ISBN', 'Category', 'Publishing Date', 'No Pages', 'Status']
-                        column_widths_active = [1, 4, 4, 4, 2, 2, 1, 2]  
+                        ft_col_list_active = ['Quantity', 'Book Title', 'Author', 'ISBN', 'Type','Category', 'Publishing Date', 'No Pages', 'Status']
+                        column_widths_active = [1, 4, 4, 4, 2, 2, 2, 1, 2]  
 
                         active_books_table = go.Figure(
                             data=[go.Table(
@@ -589,24 +596,30 @@ if check_password():
                                 )
                             )]
                         )
+                        row_count = len(active_books)
+                        min_height = 200 
+                        max_height = 700
+
+                        table_height = min(max_height, max(min_height, row_count * 30 + 80))
 
                         active_books_table.update_layout(
                             margin=dict(t=0, b=0, l=0, r=0),
-                            height=len(active_books[ft_col_list_active[0]]) * 25 + 50,
+                            height=table_height,
                             paper_bgcolor='rgba(0,0,0,0)',
                             plot_bgcolor='rgba(0,0,0,0)'
                         )
 
                         st.plotly_chart(active_books_table, use_container_width=True)
-                with sub_tab[1]:
+
+                    with sub_tab[1]:
                         st.subheader('Inactive Books')
 
-                        active_books = df[df['Status'] == 'Inactive']
+                        inactive_books = df[df['Status'] == 'Inactive']
                         
-                        ft_col_list_active = ['Quantity', 'Book Title', 'Author', 'ISBN', 'Category', 'Publishing Date', 'No Pages', 'Status']
-                        column_widths_active = [1, 4, 4, 4, 2, 2, 1, 2]  
+                        ft_col_list_active = ['Quantity', 'Book Title', 'Author', 'ISBN', 'Type','Category', 'Publishing Date', 'No Pages', 'Status']
+                        column_widths_active = [1, 4, 4, 4, 2, 2, 2, 1, 2]  
 
-                        active_books_table = go.Figure(
+                        inactive_books_table = go.Figure(
                             data=[go.Table(
                                 columnwidth=column_widths_active,
                                 hoverlabel=dict(align='auto'),
@@ -619,7 +632,7 @@ if check_password():
                                     fill_color='#162938' 
                                 ),
                                 cells=dict(
-                                    values=[active_books[col] for col in ft_col_list_active],  
+                                    values=[inactive_books[col] for col in ft_col_list_active],  
                                     font_size=12,
                                     height=24,
                                     align='left',
@@ -628,14 +641,19 @@ if check_password():
                             )]
                         )
 
-                        active_books_table.update_layout(
+                        row_count = len(inactive_books)
+                        table_height = min(max_height, max(min_height, row_count * 30 + 80))
+
+
+                        inactive_books_table.update_layout(
                             margin=dict(t=0, b=0, l=0, r=0),
-                            height=len(active_books[ft_col_list_active[0]]) * 25 + 50,
+                            height=table_height,
                             paper_bgcolor='rgba(0,0,0,0)',
                             plot_bgcolor='rgba(0,0,0,0)'
                         )
 
-                        st.plotly_chart(active_books_table, use_container_width=True)
+                        st.plotly_chart(inactive_books_table, use_container_width=True)
+
             with tab[4]:
                 with st.form(key='inventory_form'):
                     st.markdown(
@@ -658,6 +676,7 @@ if check_password():
                     isbn = create_scanner_input('inventory_isbn')
                     book_title = st.text_input('Book Title', value='', key='book_title', placeholder='Enter Book Title')
                     author = st.text_input('Author', value='', key='author', placeholder='Enter Author Name')
+                    category = st.text_input('Category', value='', key='category', placeholder='Enter Category')
                         
                     col1, col2 = st.columns(2)    
                     with col1:
@@ -671,7 +690,8 @@ if check_password():
 
 
                     with col2:
-                        category = st.text_input('Category', value='', key='category', placeholder='Enter Category')
+                        type = st.selectbox('Type', options=['Textbooks', 'Journal', 'Research Paper', 'Magazine', 'Brochure', 'Literature'])
+                        
                         sub_col1, sub_col2 = st.columns(2)
                         with sub_col1:
                             quantity = st.number_input('Quantity', min_value=1, step=1)
@@ -693,6 +713,7 @@ if check_password():
                                 'ISBN': isbn,
                                 'Publishing Date': publishing_date,
                                 'Publisher': publisher,
+                                'Type': type,
                                 'Category': category,
                                 'Language': language,
                                 'Quantity': quantity,
@@ -712,7 +733,7 @@ if check_password():
             with tab[0]:
                 st.title('')
                 with st.form(key='automatic_form'):
-                    
+
                     if "inventory" not in st.session_state:
                         st.session_state.inventory = BookInventory()
 
@@ -734,6 +755,7 @@ if check_password():
                     )
 
                     isbn = create_scanner_input('auto_inventory_isbn', placeholder="Scan or enter ISBN")
+                    book_type = st.selectbox('Type', options=['Textbooks', 'Journal', 'Research Paper', 'Magazine', 'Brochure', 'Literature'])
                     quantity = st.number_input('Quantity', min_value=1, step=1)
 
                     fetch_button = st.form_submit_button(label="Search Book Details")
@@ -746,7 +768,7 @@ if check_password():
                             if book_details:
                                 st.success(f"Book found: **{book_details['title']}** by {book_details['authors']}")
                                 
-                                # Store fetched details in session state
+                                # Store fetched details in session state, including type
                                 st.session_state.fetched_book = {
                                     "isbn": book_details["isbn"],
                                     "title": book_details["title"],
@@ -756,16 +778,14 @@ if check_password():
                                     "page_count": book_details["page_count"],
                                     "categories": book_details["categories"],
                                     "language": book_details["language"],
-                                    "quantity": quantity
+                                    "quantity": quantity,
+                                    "type": book_type  # Added the type field
                                 }
                             else:
                                 st.error("Book details not found. Please enter manually.")
                                 
                                 if "fetched_book" in st.session_state:
                                     del st.session_state.fetched_book  
-
-                                isbn = ""
-                                quantity = 1  
 
                 # Confirm and save book details
                 if "fetched_book" in st.session_state:
@@ -780,6 +800,7 @@ if check_password():
                         st.text_input("Category", value=book["categories"], disabled=True)
                         st.text_input("Language", value=book["language"], disabled=True)
                         st.number_input("Number of Pages", value=int(book["page_count"]), disabled=True)
+                        st.text_input("Type", value=book["type"], disabled=True)  # Show the selected type
 
                         confirm_button = st.form_submit_button("Add Book to Inventory")
 
@@ -790,9 +811,9 @@ if check_password():
                                 'Author': book["authors"],
                                 'ISBN': book["isbn"],
                                 'Publishing Date': book["published_date"][:4] if book["published_date"] else '',
-                                'Publishing Date': book["published_date"],
                                 'Publisher': book["publisher"],
                                 'Language': book["language"],
+                                'Type': book["type"],  # Ensure it's saved
                                 'Category': book["categories"],
                                 'Quantity': book["quantity"],
                                 'No Pages': book["page_count"],
@@ -801,7 +822,7 @@ if check_password():
                             }
 
                             updated_df = save_inventory_to_xlsx(inventory_data)
-                            
+
                             st.success(f"Book **{book['title']}** Added Successfully!")
                             del st.session_state.fetched_book  
                             st.rerun()
@@ -1132,6 +1153,7 @@ if check_password():
             st.subheader('Find by Filter')
             
             tab = st.tabs(['Books', 'Transaction'])
+
             with tab[0]:
 
                 inventory_data = pd.read_excel('Database.xlsx')
@@ -1140,27 +1162,34 @@ if check_password():
                 with col1:
                 
 
-                    sub_col = st.columns(2)
+                    sub_col = st.columns(3)
 
                     with sub_col[0]:
                         selected_categories = st.multiselect(
                             'Filter by Category:',
                             inventory_data['Category'].unique().tolist()
                         )
-                    with sub_col[1]:
+                    with sub_col[2]:
                         selected_language = st.multiselect(
                             'Filter by Language:',
                             inventory_data['Language'].unique().tolist()
                         )
+                    with sub_col[1]:
+                        selected_type = st.multiselect(
+                            'Filter by Type:',
+                            inventory_data['Type'].unique().tolist()
+                        )
 
                 # Apply filters only if at least one is selected
-                if selected_categories or selected_language:
+                if selected_categories or selected_type or selected_language:
                     filtered_data = inventory_data.copy()
 
                     if selected_categories:
                         filtered_data = filtered_data[filtered_data['Category'].isin(selected_categories)]
                     if selected_language:
                         filtered_data = filtered_data[filtered_data['Language'].isin(selected_language)]
+                    if selected_type:
+                        filtered_data = filtered_data[filtered_data['Type'].isin(selected_type)]
 
                     st.dataframe(filtered_data, use_container_width=True)
 
