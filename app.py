@@ -114,7 +114,7 @@ def check_password():
            
     st.markdown(
         "<p style='text-align: center; color: rgba(255,255,255,0.5); position: fixed; bottom: 20px; width: 100%; left: 0;'>"
-        "© 2024 Library Management System. All rights reserved.</p>",
+        "© 2025 Library Management System. All rights reserved.</p>",
         unsafe_allow_html=True
     )
     return False
