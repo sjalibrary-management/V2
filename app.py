@@ -764,8 +764,8 @@ if check_password():
                                 if "fetched_book" in st.session_state:
                                     del st.session_state.fetched_book  
 
-                                # Rerun to refresh the form
-                                st.rerun()
+                                isbn = ""
+                                quantity = 1  
 
                 # Confirm and save book details
                 if "fetched_book" in st.session_state:
