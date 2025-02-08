@@ -800,7 +800,7 @@ if check_password():
                         st.text_input("Category", value=book["categories"], disabled=True)
                         st.text_input("Language", value=book["language"], disabled=True)
                         st.number_input("Number of Pages", value=int(book["page_count"]), disabled=True)
-                        st.text_input("Type", value=book["type"], disabled=True)  # Show the selected type
+                       
 
                         confirm_button = st.form_submit_button("Add Book to Inventory")
 
