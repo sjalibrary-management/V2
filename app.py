@@ -388,9 +388,9 @@ if check_password():
         with st.sidebar:
             selected = option_menu(
                 menu_title = 'Dashboard',
-                options = ['Home', 'Check In','Check Out', 'Record', 'Inventory', ],
+                options = ['Home','Check Out','Check In' 'Record', 'Inventory', ],
                 menu_icon = 'speedometer2',
-                icons = ['house-fill', 'back', 'bookmark-check-fill', 'folder-fill', 'clipboard-data' ]
+                icons = ['house-fill', 'bookmark-check-fill',  'back', 'folder-fill', 'clipboard-data' ]
             )
         
 
@@ -796,8 +796,9 @@ if check_password():
 
                             updated_df = save_inventory_to_xlsx(inventory_data)
                             
-                            st.success(f"Book **{book['title']}** added successfully!")
-                            del st.session_state.fetched_book  # Clear session state after adding
+                            st.success(f"Book **{book['title']}** Added Successfully!")
+                            del st.session_state.fetched_book  
+                            st.rerun()
 
             
 
