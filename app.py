@@ -760,6 +760,12 @@ if check_password():
                                 }
                             else:
                                 st.error("Book details not found. Please enter manually.")
+                                
+                                if "fetched_book" in st.session_state:
+                                    del st.session_state.fetched_book  
+
+                                # Rerun to refresh the form
+                                st.rerun()
 
                 # Confirm and save book details
                 if "fetched_book" in st.session_state:
