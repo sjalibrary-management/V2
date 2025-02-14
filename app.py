@@ -502,7 +502,7 @@ if check_password():
                                             with sub_col2:
                                                 new_no_pages = st.number_input(
                                                         'Number of Pages',
-                                                        min_value=1,
+                                                        min_value=0,
                                                         value=int(selected_book['No Pages'] if pd.notna(selected_book['No Pages']) else 1)
                                                 )                                        
                                         with col2:
