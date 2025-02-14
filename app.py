@@ -64,8 +64,8 @@ def check_password():
                         width: 700px;
                         height: 400px;
                         box-shadow: 0 0 10px rgba(10, 10, 10, 0.5);
-                        margin-left: auto;
-                        margin-right: auto;
+                        
+                        
                         display: block;
                         border-radius: 20px;
 
