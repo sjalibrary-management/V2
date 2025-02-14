@@ -694,9 +694,9 @@ if check_password():
                         
                         sub_col1, sub_col2 = st.columns(2)
                         with sub_col1:
-                            quantity = st.number_input('Quantity', min_value=1, step=1)
+                            quantity = st.number_input('Quantity', min_value=1, step=1, value=1)
                         with sub_col2:
-                            no_pages = st.number_input('Number of Pages', min_value=1, step=1)
+                            no_pages = st.number_input('Number of Pages', min_value=1, step=1, value=1)
 
                         st.markdown('')
                         submit_button = st.form_submit_button(label='**Add Item**', icon='🗂️')
