@@ -703,7 +703,7 @@ if check_password():
                         st.markdown('')
 
                     if submit_button:
-                        if not book_title or not author or not isbn:
+                        if not book_title or not author or not isbn or not publishing_date or not quantity or not no_pages or not type or not publisher or not category or not language :
                             st.warning('Please fill out all fields.')
                         else:
                             inventory_data = {
