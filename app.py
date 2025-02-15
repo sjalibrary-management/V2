@@ -412,7 +412,7 @@ if check_password():
                         flex-direction: column;
                         justify-content: flex-end; 
                         align-items: center;
-                        height: 85vh; 
+                        height: 65vh; 
                         left: 5%;
                         position: relative;
                     }}
@@ -435,8 +435,10 @@ if check_password():
                 """
                 <p style='text-align: center; color: rgba(255,255,255,0.5); position: fixed; bottom: 20px; width: 100%; left: 0;'>
                     Welcome to BiblioGo!<br>
-                    BiblioGo is a Library Management System designed to make book monitoring and borrowing easier at Saint Joseph Academy. It helps students and librarians check out, check in, record, and track books efficiently.<br>
-                    Developed by Group 2 of STEM 12 - Quezon, BiblioGo improves library access and organization, making the system faster, smarter, and more convenient.<br>
+                    BiblioGo is a Library Management System designed to make book monitoring and borrowing easier at Saint Joseph Academy. <br>
+                    It helps students and librarians check out, check in, record, and track books efficiently.<br>
+                    Developed by Group 2 of STEM 12 - Quezon, BiblioGo improves library access and organization, <br>
+                    making the system faster, smarter, and more convenient.<br>
                     Start exploring and enjoy a better library experience!
                 </p>
                 """,
