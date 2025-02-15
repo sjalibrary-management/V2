@@ -433,7 +433,7 @@ if check_password():
 
             st.markdown(
                 """
-                <p style='text-align: center; color: rgba(255,255,255,0.5); position: fixed; bottom: 20px; width: 80%; left: 10%;'>
+                <p style='text-align: center; color: rgba(255,255,255,0.5); position: fixed; bottom: 20px; width: 70%; left: 20%;'>
                     Welcome to BiblioGo!<br>
                     BiblioGo is a Library Management System designed to make book monitoring and borrowing easier at Saint Joseph Academy. 
                     It helps students and librarians check out, check in, record, and track books efficiently.<br>
