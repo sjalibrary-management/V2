@@ -420,21 +420,29 @@ if check_password():
                         width: 1200px; /* Adjust as needed */
                         max-width: 80%;
                     }}
+                    .text {{
+                        margin-top: 20px;
+                        font-size: 8px; 
+                        color: #333;
+                        text-align: center;
+                        word-wrap: break-word; 
+                        word-break: break-word; 
+                        width: 80%; 
+                    }}
 
                 </style>
                 <div class="container">
                     <div class="bottom-center">
                         <img src="data:image/png;base64,{img_base64}">
                     </div>   
+                    <div class="text">
+                          Welcome to BiblioGo!  
+                          BiblioGo is a Library Management System designed to make book monitoring and borrowing easier at Saint Joseph Academy. It helps students and librarians check out, check in, record, and track books efficiently.  
+                          Developed by Group 2 of STEM 12 - Quezon, BiblioGo improves library access and organization, making the system faster, smarter, and more convenient.  
+                          Start exploring and enjoy a better library experience!
+                    </div>
                 </div>
                 """,
-                unsafe_allow_html=True
-            )
-            st.mardown(
-                "<p style='text-align: center; color: rgba(255,255,255,0.5); position: fixed; bottom: 20px; width: 100%; left: 0;'>"
-                "Welcome to BiblioGo!\nBiblioGo is a Library Management System designed to make book monitoring and borrowing easier at Saint Joseph Academy. It helps students and librarians check out, check in, record, and track books efficiently.\n
-                Developed by Group 2 of STEM 12 - Quezon, BiblioGo improves library access and organization, making the system faster, smarter, and more convenient\n
-                Start exploring and enjoy a better library experience!</p>",
                 unsafe_allow_html=True
             )
 
