@@ -403,6 +403,14 @@ if check_password():
         if selected == 'Home':
             img_base64 = get_base64_image("images/bibo.png")
 
+            text = """Welcome to BiblioGo!  
+
+            BiblioGo is a Library Management System designed to make book monitoring and borrowing easier at Saint Joseph Academy. It helps students and librarians check out, check in, record, and track books efficiently.  
+            
+            Developed by Group 2 of STEM 12 - Quezon, BiblioGo improves library access and organization, making the system faster, smarter, and more convenient.  
+            
+            Start exploring and enjoy a better library experience!"""
+
 
             st.markdown(
                 f"""
@@ -420,14 +428,12 @@ if check_password():
                         width: 1200px; /* Adjust as needed */
                         max-width: 80%;
                     }}
-                    .text {{
-                        margin-top: 20px;
-                        font-size: 8px; 
-                        color: #333;
+                    .text {{     
+                        margin-top: 20px; 
+                        font-size: 10px; 
+                        color: #333; 
                         text-align: center;
-                        word-wrap: break-word; 
-                        word-break: break-word; 
-                        width: 80%; 
+                        white-space: pre-line; 
                     }}
 
                 </style>
@@ -436,10 +442,7 @@ if check_password():
                         <img src="data:image/png;base64,{img_base64}">
                     </div>   
                     <div class="text">
-                          Welcome to BiblioGo!  
-                          BiblioGo is a Library Management System designed to make book monitoring and borrowing easier at Saint Joseph Academy. It helps students and librarians check out, check in, record, and track books efficiently.  
-                          Developed by Group 2 of STEM 12 - Quezon, BiblioGo improves library access and organization, making the system faster, smarter, and more convenient.  
-                          Start exploring and enjoy a better library experience!
+                           {text}
                     </div>
                 </div>
                 """,
