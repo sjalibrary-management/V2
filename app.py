@@ -481,11 +481,18 @@ if check_password():
                                 if not search_results[search_results['ISBN'] == x].empty else f"Unknown ({x})"
                             )
                             
-                            if selected_isbn:
-                                selected_book = df[df['ISBN'] == selected_isbn].iloc[0]
-                                
-                                edit_tab, delete_tab = st.tabs(['Edit Book', 'Delete Book'])
-                                
+                            if selected_isbn:  # Ensure selected_isbn is not empty
+                                filtered_book = df[df['ISBN'] == selected_isbn]
+                            else:  # If ISBN is empty, search by Book Title
+                                filtered_book = df[df['Book Title'] == new_title]  
+                            
+                            if not filtered_book.empty:
+                                selected_book = filtered_book.iloc[0]
+                            
+                            else:
+                                st.error("Selected book not found. Please refresh the inventory.")
+                            
+                                                            
                                 with edit_tab:
                                     with st.form(key='edit_form'):
                                         st.markdown(
