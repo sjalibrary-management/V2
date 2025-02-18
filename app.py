@@ -491,6 +491,9 @@ if check_password():
                             
                             else:
                                 st.error("Selected book not found. Please refresh the inventory.")
+
+
+                            edit_tab, delete_tab = st.tabs(['Edit Book', 'Delete Book'])
                             
                                                             
                                 with edit_tab:
