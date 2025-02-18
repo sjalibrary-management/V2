@@ -985,7 +985,9 @@ if check_password():
                         )]
                             
                     if not search_results.empty:
-                            st.dataframe(search_results, use_container_width=True)
+                            st.dataframe(search_results[['Book Title', 'Author', 'ISBN', 'Type', 'Category', 'Publishing Date', 'Publisher', 'Patron','Due']],
+                                         use_container_width=True)
+                        
                     else:
                         st.warning('No matching records found.')
                 else:
@@ -1040,7 +1042,7 @@ if check_password():
                                 checkout_list = str(df.at[book_idx, 'Check Out Dates']) if pd.notna(df.at[book_idx, 'Check Out Dates']) else ''
                                 year_list = str(df.at[book_idx, 'Year Level']) if pd.notna(df.at[book_idx, 'Year Level']) else ''
                                 section_list = str(df.at[book_idx, 'Section']) if pd.notna(df.at[book_idx, 'Section']) else ''
-                                due_date_list = str(df.at[book_idx, 'Due']) if pd.notna(df.at[book_idx, 'Due Date']) else ''  
+                                due_date_list = str(df.at[book_idx, 'Due']) if pd.notna(df.at[book_idx, 'Due']) else ''  
                                     
                                 if patron_list:
                                     patrons = [p.strip() for p in patron_list.split(',')]
