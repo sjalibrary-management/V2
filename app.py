@@ -931,17 +931,22 @@ if check_password():
                                 current_dates = str(df.at[book_idx, 'Check Out Dates']) if pd.notna(df.at[book_idx, 'Check Out Dates']) else ''
                                 current_year = str(df.at[book_idx, 'Year Level']) if pd.notna(df.at[book_idx, 'Year Level']) else ''
                                 current_section = str(df.at[book_idx, 'Section']) if pd.notna(df.at[book_idx, 'Section']) else ''
+
+                                due_date = checkout_date + pd.Timedelta(days=3)
+                                formatted_due_date = due_date.strftime('%Y-%m-%d')
                                     
                                 if current_patron == '':
                                         df.at[book_idx, 'Patron'] = student_name
                                         df.at[book_idx, 'Check Out Dates'] = formatted_date
                                         df.at[book_idx, 'Year Level'] = yearLevel
                                         df.at[book_idx, 'Section'] = section
+                                        df.at[book_idx, 'Due'] = formatted_due_date
                                 else:
                                         df.at[book_idx, 'Patron'] = f"{current_patron}, {student_name}"
                                         df.at[book_idx, 'Check Out Dates'] = f"{current_dates}, {formatted_date}"
                                         df.at[book_idx, 'Year Level'] = f"{current_year}, {yearLevel}"
                                         df.at[book_idx, 'Section'] = f"{current_section}, {section}"
+                                        df.at[book_idx, 'Due'] = f"{df.at[book_idx, 'Due Date']}, {formatted_due_date}"
                                     
                                 df = update_book_status(df)
                                 df.to_excel('Database.xlsx', index=False)
@@ -1026,18 +1031,21 @@ if check_password():
                                 checkout_list = str(df.at[book_idx, 'Check Out Dates']) if pd.notna(df.at[book_idx, 'Check Out Dates']) else ''
                                 year_list = str(df.at[book_idx, 'Year Level']) if pd.notna(df.at[book_idx, 'Year Level']) else ''
                                 section_list = str(df.at[book_idx, 'Section']) if pd.notna(df.at[book_idx, 'Section']) else ''
+                                due_date_list = str(df.at[book_idx, 'Due']) if pd.notna(df.at[book_idx, 'Due Date']) else ''  
                                     
                                 if patron_list:
                                     patrons = [p.strip() for p in patron_list.split(',')]
                                     checkouts = [d.strip() for d in checkout_list.split(',')]
                                     years = [y.strip() for y in year_list.split(',')] if year_list else []
                                     sections = [s.strip() for s in section_list.split(',')] if section_list else []
+                                    due_dates = [d.strip() for d in due_date_list.split(',')] if due_date_list else [] 
                                         
                                     if student_name in patrons:
                                             idx = patrons.index(student_name)
                                             
                                             patrons.pop(idx)
                                             checkouts.pop(idx)
+                                            due_dates.pop(idx)
                                             if idx < len(years):
                                                 years.pop(idx)
                                             if idx < len(sections):
