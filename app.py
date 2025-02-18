@@ -711,7 +711,6 @@ if check_password():
                         st.markdown('')
                         submit_button = st.form_submit_button(label='**Add Item**', icon='🗂️')
                         
-                        clear_button = st.form_submit_button("**Clear**", icon='🔻')
 
                     if submit_button:
                         if not book_title or not author or not isbn or not publishing_date or not quantity or not no_pages or not type or not publisher or not category or not language :
@@ -739,22 +738,22 @@ if check_password():
                                 st.success(f'Updated quantity for existing book. New total: {book_data["Quantity"]}')
                             else:
                                 st.success('New item has been added successfully!')
+                            st.session_state.book_title = ''
+                            st.session_state.author = ''
+                            st.session_state.isbn = ''
+                            st.session_state.publishing_date = ''
+                            st.session_state.publisher = ''
+                            st.session_state.type = ''
+                            st.session_state.category = ''
+                            st.session_state.language = ''
+                            st.session_state.quantity = 0
+                            st.session_state.no_pages = 0
+
+            
+
+            
                    
 
-                    if clear_button:
-                        # Reset the form fields
-                        st.session_state.book_title = ''
-                        st.session_state.author = ''
-                        st.session_state.isbn = ''
-                        st.session_state.publishing_date = ''
-                        st.session_state.publisher = ''
-                        st.session_state.type = ''
-                        st.session_state.category = ''
-                        st.session_state.language = ''
-                        st.session_state.quantity = 1
-                        st.session_state.no_pages = 1
-                    
-                        st.rerun()
 
             
 
