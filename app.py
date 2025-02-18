@@ -710,7 +710,8 @@ if check_password():
 
                         st.markdown('')
                         submit_button = st.form_submit_button(label='**Add Item**', icon='🗂️')
-                        st.markdown('')
+                        
+                        clear_button = st.form_submit_button("Clear")
 
                     if submit_button:
                         if not book_title or not author or not isbn or not publishing_date or not quantity or not no_pages or not type or not publisher or not category or not language :
@@ -721,7 +722,6 @@ if check_password():
                                 'Book Title': book_title,
                                 'Author': author,
                                 'ISBN': isbn,
-                                'Publishing Date': publishing_date,
                                 'Publisher': publisher,
                                 'Type': type,
                                 'Category': category,
@@ -739,7 +739,7 @@ if check_password():
                                 st.success(f'Updated quantity for existing book. New total: {book_data["Quantity"]}')
                             else:
                                 st.success('New item has been added successfully!')
-                    clear_button = st.form_submit_button("Clear")
+                   
 
                     if clear_button:
                         # Reset the form fields
