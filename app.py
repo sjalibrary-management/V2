@@ -843,7 +843,7 @@ if check_password():
                                 del st.session_state.fetched_book  # Clear the current book data if present
                         
                             # You can also reset other fields or variables that store form values
-                            st.experimental_rerun()
+                            st.rerun()
 
             
 
