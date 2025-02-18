@@ -474,9 +474,12 @@ if check_password():
                                     use_container_width=True)
                             
                             isbn_list = search_results['ISBN'].tolist()
-                            selected_isbn = st.selectbox('Select book to edit:', 
-                                                    isbn_list,
-                                                    format_func=lambda x: f"{search_results[search_results['ISBN']==x]['Book Title'].iloc[0]} ({x})")
+                            selected_isbn = st.selectbox(
+                                'Select book to edit:',
+                                isbn_list,
+                                format_func=lambda x: f"{search_results[search_results['ISBN'] == x]['Book Title'].iloc[0]} ({x})" 
+                                if not search_results[search_results['ISBN'] == x].empty else f"Unknown ({x})"
+                            )
                             
                             if selected_isbn:
                                 selected_book = df[df['ISBN'] == selected_isbn].iloc[0]
