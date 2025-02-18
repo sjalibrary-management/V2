@@ -1066,6 +1066,7 @@ if check_password():
                                             df.at[book_idx, 'Check Out Dates'] = ', '.join(checkouts) if checkouts else ''
                                             df.at[book_idx, 'Year Level'] = ', '.join(years) if years else ''
                                             df.at[book_idx, 'Section'] = ', '.join(sections) if sections else ''
+                                            df.at[book_idx, 'Due'] = ', '.join(due_dates) if sections else ''
                                             
                                             # Update status after modifying data
                                             df = update_book_status(df)
