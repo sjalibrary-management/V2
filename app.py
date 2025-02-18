@@ -460,8 +460,8 @@ if check_password():
                 df = load_inventory()             
                 if df is not None:
                     search_term = st.text_input('Search for book to edit (Title/ISBN/Author)', 
-                                            key='edit_search',
-                                            placeholder='Enter book title, ISBN, or author name')
+                                                key='edit_search',
+                                                placeholder='Enter book title, ISBN, or author name')
                     
                     if search_term:
                         # Create a mask for searching by Book Title, ISBN, or Author
@@ -469,118 +469,108 @@ if check_password():
                                (df['ISBN'].str.contains(search_term, case=False)) | \
                                (df['Author'].str.contains(search_term, case=False, na=False))
                         search_results = df[mask]
-                    
+            
                         if not search_results.empty:
                             # Display search results in a dataframe
                             st.dataframe(search_results[['Book Title', 'Author', 'ISBN', 'Quantity', 'Type', 'Category', 'No Pages', 'Publishing Date', 'Publisher', 'Language']],
                                          use_container_width=True)
-                    
+            
                             # Let the user select the index number
                             selected_index = st.selectbox(
                                 'Select book to edit by index:',
                                 options=range(len(search_results)),
                                 format_func=lambda idx: f"{search_results.iloc[idx]['Book Title']} ({search_results.iloc[idx]['ISBN']})"
                             )
-                    
+            
                             # Retrieve the selected book using the index
                             selected_book = search_results.iloc[selected_index]
-                                          
-                                        
-
-
-                                
-                                edit_tab, delete_tab = st.tabs(['Edit Book', 'Delete Book'])
-                            
-                                                            
-                                with edit_tab:
-                                    with st.form(key='edit_form'):
-                                        st.markdown(
-                                            """
-                                            <style>
-                                                @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
-                                                .edit-form-title {
-                                                    font-family: 'Poppins', sans-serif;
-                                                    font-size: 28px;
-                                                    color: #2a2a2a;
-                                                    text-align: center;
-                                                }
-                                            </style>
-                                            <h1 class="edit-form-title">Edit Details</h1>
-                                            <p style="text-align: center;">Fill out the form to edit an item to the inventory.</p>
-                                            """, 
-                                            unsafe_allow_html=True
-                                        )
-                                        new_title = st.text_input('Book Title', value=selected_book['Book Title'] if pd.notna(selected_book['Book Title']) else '')
-                                        new_author = st.text_input('Author', value=selected_book['Author'] if pd.notna(selected_book['Author']) else '')
-                                        new_category = st.text_input('Category', value=selected_book['Category'] if pd.notna(selected_book['Category']) else '')
-                                        col1, col2 = st.columns(2)
-                                        with col1:
-                                            new_publisher = st.text_input('Publisher', value=selected_book['Publisher'] if pd.notna(selected_book['Publisher']) else '')
-
-                                            sub_col1, sub_col2 = st.columns(2)
-
-                                            
-                                            with sub_col1:
-       
-                                                new_quantity = st.number_input('Quantity', min_value=1, value=int(selected_book['Quantity']) if pd.notna(selected_book['Quantity']) else 1)
-                                            with sub_col2:
-                                                new_no_pages = st.number_input('Number of Pages', min_value=1, value=int(selected_book['No Pages']) if pd.notna(selected_book['No Pages']) else 1)
-                                                                                        
-                                        with col2:
-                                            type_options = ['Textbooks', 'Journal', 'Research Paper', 'Magazine', 'Brochure', 'Literature']
-                                            type_index = type_options.index(selected_book['Type']) if selected_book['Type'] in type_options else 0
-                                            new_type = st.selectbox('Type', options=type_options, index=type_index)
             
-                                        
-                                        
-                                            sub_col1, sub_col2 = st.columns(2)
-                                            with sub_col1:
-                                                new_publishing_date = st.text_input('Publishing Date', value=selected_book['Publishing Date'] if pd.notna(selected_book['Publishing Date']) else '')
-                                            with sub_col2:
-                                                new_language = st.text_input('Language', value=selected_book['Language'] if pd.notna(selected_book['Language']) else '')
-                                                
-                                            update_button = st.form_submit_button('Update Book')
-                                        
-                                        if update_button:
-                                            updates = {
-                                                'Book Title': new_title,
-                                                'Author': new_author,
-                                                'Quantity': new_quantity,
-                                                'Type': new_type,
-                                                'Category': new_category,
-                                                'No Pages': new_no_pages,
-                                                'Publishing Date': new_publishing_date,
-                                                'Publisher': new_publisher,
-                                                'Language': new_language
+                            # Create the edit and delete tabs
+                            edit_tab, delete_tab = st.tabs(['Edit Book', 'Delete Book'])
+            
+                            with edit_tab:
+                                with st.form(key='edit_form'):
+                                    st.markdown(
+                                        """
+                                        <style>
+                                            @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+                                            .edit-form-title {
+                                                font-family: 'Poppins', sans-serif;
+                                                font-size: 28px;
+                                                color: #2a2a2a;
+                                                text-align: center;
                                             }
-                                            
-                                            updated_df = edit_inventory_item(df, selected_isbn, updates)
-                                            if updated_df is not None:
-                                                st.success('Book updated successfully!')
-                                                
-                                            else:
-                                                st.error('Failed to update book.')
-
-                                
-                                with delete_tab:
-                                    st.markdown('### Delete Book')
-                                    st.write(f"Book Title: {selected_book['Book Title']}")
-                                    st.write(f"Author: {selected_book['Author']}")
-                                    st.write(f"ISBN: {selected_isbn}")
-                                    
-                                    confirm_delete = st.checkbox('I confirm that I want to delete this book from the inventory')
-                                    
-                                    if st.button('Delete Book', disabled=not confirm_delete):
-                                        updated_df, message = delete_inventory_item(df, selected_isbn)
+                                        </style>
+                                        <h1 class="edit-form-title">Edit Details</h1>
+                                        <p style="text-align: center;">Fill out the form to edit an item in the inventory.</p>
+                                        """, 
+                                        unsafe_allow_html=True
+                                    )
+                                    new_title = st.text_input('Book Title', value=selected_book['Book Title'] if pd.notna(selected_book['Book Title']) else '')
+                                    new_author = st.text_input('Author', value=selected_book['Author'] if pd.notna(selected_book['Author']) else '')
+                                    new_category = st.text_input('Category', value=selected_book['Category'] if pd.notna(selected_book['Category']) else '')
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        new_publisher = st.text_input('Publisher', value=selected_book['Publisher'] if pd.notna(selected_book['Publisher']) else '')
+                                        sub_col1, sub_col2 = st.columns(2)
+                                        with sub_col1:
+                                            new_quantity = st.number_input('Quantity', min_value=1, value=int(selected_book['Quantity']) if pd.notna(selected_book['Quantity']) else 1)
+                                        with sub_col2:
+                                            new_no_pages = st.number_input('Number of Pages', min_value=1, value=int(selected_book['No Pages']) if pd.notna(selected_book['No Pages']) else 1)
+                                    with col2:
+                                        type_options = ['Textbooks', 'Journal', 'Research Paper', 'Magazine', 'Brochure', 'Literature']
+                                        type_index = type_options.index(selected_book['Type']) if selected_book['Type'] in type_options else 0
+                                        new_type = st.selectbox('Type', options=type_options, index=type_index)
+            
+                                        sub_col1, sub_col2 = st.columns(2)
+                                        with sub_col1:
+                                            new_publishing_date = st.text_input('Publishing Date', value=selected_book['Publishing Date'] if pd.notna(selected_book['Publishing Date']) else '')
+                                        with sub_col2:
+                                            new_language = st.text_input('Language', value=selected_book['Language'] if pd.notna(selected_book['Language']) else '')
+                                        
+                                        update_button = st.form_submit_button('Update Book')
+            
+                                    if update_button:
+                                        updates = {
+                                            'Book Title': new_title,
+                                            'Author': new_author,
+                                            'Quantity': new_quantity,
+                                            'Type': new_type,
+                                            'Category': new_category,
+                                            'No Pages': new_no_pages,
+                                            'Publishing Date': new_publishing_date,
+                                            'Publisher': new_publisher,
+                                            'Language': new_language
+                                        }
+            
+                                        # Use the selected book's ISBN for updating
+                                        updated_df = edit_inventory_item(df, selected_book['ISBN'], updates)
                                         if updated_df is not None:
-                                            st.success(message)
-                                            st.rerun()
+                                            st.success('Book updated successfully!')
                                         else:
-                                            st.error(message)
+                                            st.error('Failed to update book.')
+            
+                            with delete_tab:
+                                st.markdown('### Delete Book')
+                                st.write(f"Book Title: {selected_book['Book Title']}")
+                                st.write(f"Author: {selected_book['Author']}")
+                                st.write(f"ISBN: {selected_book['ISBN']}")
+            
+                                confirm_delete = st.checkbox('I confirm that I want to delete this book from the inventory')
+            
+                                if st.button('Delete Book', disabled=not confirm_delete):
+                                    # Use the selected book's ISBN for deletion
+                                    updated_df, message = delete_inventory_item(df, selected_book['ISBN'])
+                                    if updated_df is not None:
+                                        st.success(message)
+                                        st.rerun()
+                                    else:
+                                        st.error(message)
                         else:
                             st.warning('No books found matching your search term.')
                 else:
                     st.error('No inventory database found.')
+
 
                 with tab[2]:
                     st.subheader('Inventory Record')
