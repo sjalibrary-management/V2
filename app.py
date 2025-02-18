@@ -465,7 +465,7 @@ if check_password():
                     
                     if search_term:
                         mask = (df['Book Title'].str.contains(search_term, case=False, na=False)) | \
-                            (df['ISBN'].str.contains(search_term, case=False, na=False)) | \
+                            (df['ISBN'].str.contains(search_term, case=False)) | \
                             (df['Author'].str.contains(search_term, case=False, na=False))
                         search_results = df[mask]
                         
