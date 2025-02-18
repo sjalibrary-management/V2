@@ -873,7 +873,8 @@ if check_password():
                     )]
                     
                     if not search_results.empty:
-                        st.dataframe(search_results, use_container_width=True)
+                        st.dataframe(search_results[['Book Title', 'Author', 'ISBN', 'Quantity', 'Type', 'Category', 'No Pages', 'Publishing Date', 'Publisher', 'Language']],
+                                         use_container_width=True)
                     else:
                         st.warning('No matching records found.')
                 else:
