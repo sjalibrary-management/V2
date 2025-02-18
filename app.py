@@ -711,7 +711,7 @@ if check_password():
                         st.markdown('')
                         submit_button = st.form_submit_button(label='**Add Item**', icon='🗂️')
                         
-                        clear_button = st.form_submit_button("**Clear", icon='🔻')
+                        clear_button = st.form_submit_button("**Clear**", icon='🔻')
 
                     if submit_button:
                         if not book_title or not author or not isbn or not publishing_date or not quantity or not no_pages or not type or not publisher or not category or not language :
