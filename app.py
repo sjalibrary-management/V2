@@ -501,26 +501,22 @@ if check_password():
                                             """, 
                                             unsafe_allow_html=True
                                         )
-                                        new_title = st.text_input('Book Title', value=selected_book['Book Title'])
-                                        new_author = st.text_input('Author', value=selected_book['Author'])
-                                        new_category = st.text_input('Category', value=selected_book['Category'])
+                                        new_title = st.text_input('Book Title', value=selected_book['Book Title'] if pd.notna(selected_book['Book Title']) else '')
+                                        new_author = st.text_input('Author', value=selected_book['Author'] if pd.notna(selected_book['Author']) else ''
+                                        new_category = st.text_input('Category', value=selected_book['Category'] if pd.notna(selected_book['Category']) else '')
                                         col1, col2 = st.columns(2)
                                         with col1:
-                                            new_publisher = st.text_input('Publisher', value=selected_book['Publisher'])
+                                            new_publisher = st.text_input('Publisher', value=selected_book['Publisher'] if pd.notna(selected_book['Publisher']) else '')
+
                                             sub_col1, sub_col2 = st.columns(2)
 
                                             
                                             with sub_col1:
        
-                                                new_quantity = st.number_input('Quantity', 
-                                                                                min_value=1, 
-                                                                                value=int(selected_book['Quantity'])) 
+                                                new_quantity = st.number_input('Quantity', min_value=1, value=int(selected_book['Quantity']) if pd.notna(selected_book['Quantity']) else 1)
                                             with sub_col2:
-                                                new_no_pages = st.number_input(
-                                                        'Number of Pages',
-                                                        min_value=1,
-                                                        value=int(selected_book['No Pages'] if pd.notna(selected_book['No Pages']) else 1)
-                                                )                                        
+                                                new_no_pages = st.number_input('Number of Pages', min_value=1, value=int(selected_book['No Pages']) if pd.notna(selected_book['No Pages']) else 1)
+                                                                                        
                                         with col2:
                                             type_options = ['Textbooks', 'Journal', 'Research Paper', 'Magazine', 'Brochure', 'Literature']
                                             type_index = type_options.index(selected_book['Type']) if selected_book['Type'] in type_options else 0
@@ -530,10 +526,9 @@ if check_password():
                                         
                                             sub_col1, sub_col2 = st.columns(2)
                                             with sub_col1:
-                                                new_publishing_date = st.text_input('Publishing Date', 
-                                                                                value=selected_book['Publishing Date'])
+                                                new_publishing_date = st.text_input('Publishing Date', value=selected_book['Publishing Date'] if pd.notna(selected_book['Publishing Date']) else '')
                                             with sub_col2:
-                                                new_language = st.text_input('Language', value=selected_book['Language'])
+                                                new_language = st.text_input('Language', value=selected_book['Language'] if pd.notna(selected_book['Language']) else '')
                                                 
                                             update_button = st.form_submit_button('Update Book')
                                         
