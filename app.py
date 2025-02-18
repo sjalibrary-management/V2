@@ -835,7 +835,15 @@ if check_password():
 
                             st.success(f"Book **{book['title']}** Added Successfully!")
                             del st.session_state.fetched_book  
-                            st.rerun()
+                        cancel_button = st.button("Cancel")
+                        
+                        if cancel_button:
+                            # Reset the session state or clear specific form entries
+                            if 'fetched_book' in st.session_state:
+                                del st.session_state.fetched_book  # Clear the current book data if present
+                        
+                            # You can also reset other fields or variables that store form values
+                            st.experimental_rerun()
 
             
 
