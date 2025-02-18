@@ -739,6 +739,24 @@ if check_password():
                                 st.success(f'Updated quantity for existing book. New total: {book_data["Quantity"]}')
                             else:
                                 st.success('New item has been added successfully!')
+                    clear_button = st.button("Clear")
+
+                    if clear_button:
+                        # Reset the form fields
+                        st.session_state.book_title = ''
+                        st.session_state.author = ''
+                        st.session_state.isbn = ''
+                        st.session_state.publishing_date = ''
+                        st.session_state.publisher = ''
+                        st.session_state.type = ''
+                        st.session_state.category = ''
+                        st.session_state.language = ''
+                        st.session_state.quantity = 1
+                        st.session_state.no_pages = 1
+                    
+                        st.rerun()
+
+            
 
             with tab[0]:
                 st.title('')
