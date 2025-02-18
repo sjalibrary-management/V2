@@ -464,34 +464,28 @@ if check_password():
                                             placeholder='Enter book title, ISBN, or author name')
                     
                     if search_term:
+                        # Create a mask for searching by Book Title, ISBN, or Author
                         mask = (df['Book Title'].str.contains(search_term, case=False, na=False)) | \
                                (df['ISBN'].str.contains(search_term, case=False)) | \
                                (df['Author'].str.contains(search_term, case=False, na=False))
                         search_results = df[mask]
                     
                         if not search_results.empty:
+                            # Display search results in a dataframe
                             st.dataframe(search_results[['Book Title', 'Author', 'ISBN', 'Quantity', 'Type', 'Category', 'No Pages', 'Publishing Date', 'Publisher', 'Language']],
                                          use_container_width=True)
                     
-                            isbn_list = search_results['ISBN'].tolist()
-                            selected_isbn = st.selectbox(
-                                'Select book to edit:',
-                                isbn_list,
-                                format_func=lambda x: f"{search_results[search_results['ISBN'] == x]['Book Title'].iloc[0]} ({x})"
-                                if not search_results[search_results['ISBN'] == x].empty else f"Unknown ({x})"
+                            # Let the user select the index number
+                            selected_index = st.selectbox(
+                                'Select book to edit by index:',
+                                options=range(len(search_results)),
+                                format_func=lambda idx: f"{search_results.iloc[idx]['Book Title']} ({search_results.iloc[idx]['ISBN']})"
                             )
                     
-                            if selected_isbn:  # If ISBN is selected
-                                filtered_book = df[df['ISBN'] == selected_isbn]
-                            else:  # If ISBN is empty, use Book Title for filtering
-                                filtered_book = df[df['Book Title'] == search_term]
-                    
-                            if not filtered_book.empty:
-                                selected_book = filtered_book.iloc[0]
-                                # Proceed with the rest of your logic (editing the book)
-                            else:
-                                st.error("Selected book not found. Please refresh the inventory.")
-                    
+                            # Retrieve the selected book using the index
+                            selected_book = search_results.iloc[selected_index]
+                                          
+                                        
 
 
                                 
