@@ -505,7 +505,7 @@ if check_password():
                                             unsafe_allow_html=True
                                         )
                                         new_title = st.text_input('Book Title', value=selected_book['Book Title'] if pd.notna(selected_book['Book Title']) else '')
-                                        new_author = st.text_input('Author', value=selected_book['Author'] if pd.notna(selected_book['Author']) else ''
+                                        new_author = st.text_input('Author', value=selected_book['Author'] if pd.notna(selected_book['Author']) else '')
                                         new_category = st.text_input('Category', value=selected_book['Category'] if pd.notna(selected_book['Category']) else '')
                                         col1, col2 = st.columns(2)
                                         with col1:
