@@ -861,16 +861,24 @@ if check_password():
 
             st.subheader('Search Book to Check Out')
             search_term = st.text_input('Search by Book Title or Author', value='', key='search_term', placeholder='Enter search term')
-            if search_term:
+           if search_term:
                 if os.path.exists('Database.xlsx'):
                     df = pd.read_excel('Database.xlsx')
-                    search_results = df[df.apply(lambda row: search_term.lower() in row['Book Title'].lower() or search_term.lower() in row['Author'].lower(), axis=1)]
+                    
+                    # Ensure that 'Book Title' and 'Author' are strings, handling NaN values
+                    search_results = df[df.apply(
+                        lambda row: (str(row['Book Title']).lower() if isinstance(row['Book Title'], str) else '').find(search_term.lower()) != -1 or 
+                                    (str(row['Author']).lower() if isinstance(row['Author'], str) else '').find(search_term.lower()) != -1,
+                        axis=1
+                    )]
+                    
                     if not search_results.empty:
-                            st.dataframe(search_results,  use_container_width=True)
+                        st.dataframe(search_results, use_container_width=True)
                     else:
                         st.warning('No matching records found.')
                 else:
-                        st.warning('No inventory data found.')
+                    st.warning('No inventory data found.')
+
             st.markdown("---")
             with st.form(key='check_out_form'):
                 st.markdown(
