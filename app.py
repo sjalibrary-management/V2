@@ -861,7 +861,7 @@ if check_password():
 
             st.subheader('Search Book to Check Out')
             search_term = st.text_input('Search by Book Title or Author', value='', key='search_term', placeholder='Enter search term')
-           if search_term:
+            if search_term:
                 if os.path.exists('Database.xlsx'):
                     df = pd.read_excel('Database.xlsx')
                     
