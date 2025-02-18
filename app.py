@@ -739,7 +739,7 @@ if check_password():
                                 st.success(f'Updated quantity for existing book. New total: {book_data["Quantity"]}')
                             else:
                                 st.success('New item has been added successfully!')
-                    clear_button = st.button("Clear")
+                    clear_button = st.form_submit_button("Clear")
 
                     if clear_button:
                         # Reset the form fields
