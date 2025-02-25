@@ -1085,6 +1085,7 @@ if check_password():
             borrow_books = int(record_data['Check Out Dates'].apply(count_borrowed_books).sum())  
             available_books = total_books - borrow_books
 
+        
             df_book_categories = record_data[record_data['Category'].notnull()]
             book_categories = df_book_categories.groupby('Category')['Quantity'].sum()
             df_cat = book_categories.reset_index()
