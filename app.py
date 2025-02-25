@@ -1081,6 +1081,7 @@ if check_password():
         if selected == 'Record':
 
             record_data = pd.read_excel('Database.xlsx')
+            transaction_data = pd.read_excel('Transaction.xlsx')
             total_books = int(record_data['Quantity'].sum()) 
             borrow_books = int(record_data['Check Out Dates'].apply(count_borrowed_books).sum())  
             available_books = total_books - borrow_books
