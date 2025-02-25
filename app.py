@@ -1081,26 +1081,10 @@ if check_password():
         if selected == 'Record':
 
             record_data = pd.read_excel('Database.xlsx')
-            transaction_data = pd.read_excel('Transaction.xlsx')
             total_books = int(record_data['Quantity'].sum()) 
             borrow_books = int(record_data['Check Out Dates'].apply(count_borrowed_books).sum())  
             available_books = total_books - borrow_books
 
-           # Ensure ISBN is treated as a string in both DataFrames
-            record_data['ISBN'] = record_data['ISBN'].astype(str)
-            transaction_data['ISBN'] = transaction_data['ISBN'].astype(str)
-            
-            # Merge 'Due' column into transaction data
-            transaction_data = transaction_data.merge(
-                record_data[['ISBN', 'Due']], on='ISBN', how='left'
-            )
-
-            # Reorder columns
-            transaction_data = transaction_data[
-                ['Transaction ID', 'Patron Name', 'Transaction Type', 'Due', 'Status', 'ISBN', 'Book Title', 'Author', 'Year Level', 'Section']
-            ]
-
-        
             df_book_categories = record_data[record_data['Category'].notnull()]
             book_categories = df_book_categories.groupby('Category')['Quantity'].sum()
             df_cat = book_categories.reset_index()
@@ -1251,6 +1235,17 @@ if check_password():
 
             with tab[1]:
                 transaction_data = pd.read_excel('Transaction.xlsx')
+                book_data = pd.read_excel('Database.xlsx')
+
+                # Merge transaction data with book data to get "Due"
+                merged_data = transaction_data.merge(book_data[['ISBN', 'Due']], on='ISBN', how='left')
+        
+                # Reorder columns
+                merged_data = merged_data[
+                    ['Transaction ID', 'Patron Name', 'Transaction Type', 'Due', 'Status', 
+                     'ISBN', 'Book Title', 'Author', 'Year Level', 'Section']
+                ]
+
 
                 col1, col2 = st.columns(2)
                 with col1:
