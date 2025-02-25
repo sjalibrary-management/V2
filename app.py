@@ -1077,88 +1077,88 @@ if check_password():
 
     #-------------------------------------------------------- RECORD ------------------------------------------------------------------------
 
-    if selected == 'Record':
-
-        record_data = pd.read_excel('Database.xlsx')
-        transaction_data = pd.read_excel('Transaction.xlsx')
-        
-        # Calculate book statistics
-        total_books = int(record_data['Quantity'].sum())
-        borrow_books = int(record_data['Check Out Dates'].apply(count_borrowed_books).sum())  
-        available_books = total_books - borrow_books
-
-        # Merge 'Due' column into transaction data
-        transaction_data = transaction_data.merge(
-            record_data[['ISBN', 'Due']], on='ISBN', how='left'
-        )
-
-        # Reorder columns
-        transaction_data = transaction_data[
-            ['Transaction ID', 'Patron Name', 'Transaction Type', 'Due', 'Status', 'ISBN', 'Book Title', 'Author', 'Year Level', 'Section']
-        ]
-        
-        # Display book statistics
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Total Books", total_books)
-        
-        with col2:
-            st.metric("Borrowed Books", borrow_books)
-        
-        with col3:
-            st.metric("Available Books", available_books)
-        
-        # Book categories chart
-        df_book_categories = record_data[record_data['Category'].notnull()]
-        
-        if not df_book_categories.empty:
-            book_categories = df_book_categories.groupby('Category')['Quantity'].sum().reset_index()
-            fig = px.bar(book_categories, x='Category', y='Quantity', color='Category', template='seaborn')
-            st.plotly_chart(fig, use_container_width=True)
-        
-        else:
-            st.warning('No data found.')
-        
-        # Filter section
-        st.subheader('Find by Filter')
-        tab = st.tabs(['Books', 'Transaction'])
-        
-        with tab[0]:
-            selected_categories = st.multiselect('Filter by Category:', record_data['Category'].unique().tolist())
-            selected_language = st.multiselect('Filter by Language:', record_data['Language'].unique().tolist())
-            selected_type = st.multiselect('Filter by Type:', record_data['Type'].unique().tolist())
+        if selected == 'Record':
+    
+            record_data = pd.read_excel('Database.xlsx')
+            transaction_data = pd.read_excel('Transaction.xlsx')
             
-            filtered_data = record_data.copy()
+            # Calculate book statistics
+            total_books = int(record_data['Quantity'].sum())
+            borrow_books = int(record_data['Check Out Dates'].apply(count_borrowed_books).sum())  
+            available_books = total_books - borrow_books
+    
+            # Merge 'Due' column into transaction data
+            transaction_data = transaction_data.merge(
+                record_data[['ISBN', 'Due']], on='ISBN', how='left'
+            )
+    
+            # Reorder columns
+            transaction_data = transaction_data[
+                ['Transaction ID', 'Patron Name', 'Transaction Type', 'Due', 'Status', 'ISBN', 'Book Title', 'Author', 'Year Level', 'Section']
+            ]
             
-            if selected_categories:
-                filtered_data = filtered_data[filtered_data['Category'].isin(selected_categories)]
+            # Display book statistics
+            col1, col2, col3 = st.columns(3)
             
-            if selected_language:
-                filtered_data = filtered_data[filtered_data['Language'].isin(selected_language)]
+            with col1:
+                st.metric("Total Books", total_books)
             
-            if selected_type:
-                filtered_data = filtered_data[filtered_data['Type'].isin(selected_type)]
+            with col2:
+                st.metric("Borrowed Books", borrow_books)
             
-            st.dataframe(filtered_data, use_container_width=True)
-        
-        with tab[1]:
-            selected_types = st.multiselect('Filter by Transaction Type:', transaction_data['Transaction Type'].unique().tolist())
-            selected_year_level = st.multiselect('Filter by Year Level:', transaction_data['Year Level'].unique().tolist())
-            selected_section = st.multiselect('Filter by Section:', transaction_data['Section'].unique().tolist())
+            with col3:
+                st.metric("Available Books", available_books)
             
-            filtered_transactions = transaction_data.copy()
+            # Book categories chart
+            df_book_categories = record_data[record_data['Category'].notnull()]
             
-            if selected_types:
-                filtered_transactions = filtered_transactions[filtered_transactions['Transaction Type'].isin(selected_types)]
+            if not df_book_categories.empty:
+                book_categories = df_book_categories.groupby('Category')['Quantity'].sum().reset_index()
+                fig = px.bar(book_categories, x='Category', y='Quantity', color='Category', template='seaborn')
+                st.plotly_chart(fig, use_container_width=True)
             
-            if selected_year_level:
-                filtered_transactions = filtered_transactions[filtered_transactions['Year Level'].isin(selected_year_level)]
+            else:
+                st.warning('No data found.')
             
-            if selected_section:
-                filtered_transactions = filtered_transactions[filtered_transactions['Section'].isin(selected_section)]
+            # Filter section
+            st.subheader('Find by Filter')
+            tab = st.tabs(['Books', 'Transaction'])
             
-            st.dataframe(filtered_transactions, use_container_width=True)
+            with tab[0]:
+                selected_categories = st.multiselect('Filter by Category:', record_data['Category'].unique().tolist())
+                selected_language = st.multiselect('Filter by Language:', record_data['Language'].unique().tolist())
+                selected_type = st.multiselect('Filter by Type:', record_data['Type'].unique().tolist())
+                
+                filtered_data = record_data.copy()
+                
+                if selected_categories:
+                    filtered_data = filtered_data[filtered_data['Category'].isin(selected_categories)]
+                
+                if selected_language:
+                    filtered_data = filtered_data[filtered_data['Language'].isin(selected_language)]
+                
+                if selected_type:
+                    filtered_data = filtered_data[filtered_data['Type'].isin(selected_type)]
+                
+                st.dataframe(filtered_data, use_container_width=True)
+            
+            with tab[1]:
+                selected_types = st.multiselect('Filter by Transaction Type:', transaction_data['Transaction Type'].unique().tolist())
+                selected_year_level = st.multiselect('Filter by Year Level:', transaction_data['Year Level'].unique().tolist())
+                selected_section = st.multiselect('Filter by Section:', transaction_data['Section'].unique().tolist())
+                
+                filtered_transactions = transaction_data.copy()
+                
+                if selected_types:
+                    filtered_transactions = filtered_transactions[filtered_transactions['Transaction Type'].isin(selected_types)]
+                
+                if selected_year_level:
+                    filtered_transactions = filtered_transactions[filtered_transactions['Year Level'].isin(selected_year_level)]
+                
+                if selected_section:
+                    filtered_transactions = filtered_transactions[filtered_transactions['Section'].isin(selected_section)]
+                
+                st.dataframe(filtered_transactions, use_container_width=True)
 
 
     def main():
