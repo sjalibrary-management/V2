@@ -1277,7 +1277,7 @@ if check_password():
 
                 # Apply filters only if at least one filter is selected
                 if selected_types or selected_year_level or selected_section:
-                    filtered_data = transaction_data.copy()
+                    filtered_data = merged_data.copy()
 
                     if selected_types:
                         filtered_data = filtered_data[filtered_data['Transaction Type'].isin(selected_types)]
