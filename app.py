@@ -1233,6 +1233,11 @@ if check_password():
             with tab[1]:
                 transaction_data = pd.read_excel('Transaction.xlsx')
 
+                # Ensure the column exists and reorder
+                if 'Patron Name' in transaction_data.columns and 'Transaction Type' in transaction_data.columns:
+                    columns = ['Patron Name', 'Transaction Type'] + [col for col in transaction_data.columns if col not in ['Patron Name', 'Transaction Type']]
+                    transaction_data = transaction_data[columns]
+
                 col1, col2 = st.columns(2)
                 with col1:
                   
