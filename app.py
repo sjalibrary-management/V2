@@ -1234,8 +1234,15 @@ if check_password():
                 transaction_data = pd.read_excel('Transaction.xlsx')
 
                 # Ensure the column exists and reorder
-                if 'Patron Name' in transaction_data.columns and 'Transaction Type' in transaction_data.columns:
-                    columns = ['Patron Name', 'Transaction Type'] + [col for col in transaction_data.columns if col not in ['Patron Name', 'Transaction Type']]
+                if all(col in transaction_data.columns for col in ['Transaction ID', 'Patron Name', 'Transaction Type', 'Due']):
+                    
+                    # Compute the status column
+                    today = pd.Timestamp.today().date()
+                    transaction_data['Due'] = pd.to_datetime(transaction_data['Due']).dt.date
+                    transaction_data['Status'] = transaction_data['Due'].apply(lambda x: "Overdue" if x < today else "Successful")
+
+                    # Define the new order
+                    columns = ['Transaction ID', 'Patron Name', 'Transaction Type', 'Due', 'Status'] + [col for col in transaction_data.columns if col not in ['Transaction ID', 'Patron Name', 'Transaction Type', 'Due', 'Status']]
                     transaction_data = transaction_data[columns]
 
                 col1, col2 = st.columns(2)
