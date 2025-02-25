@@ -1086,6 +1086,10 @@ if check_password():
             borrow_books = int(record_data['Check Out Dates'].apply(count_borrowed_books).sum())  
             available_books = total_books - borrow_books
 
+           # Ensure ISBN is treated as a string in both DataFrames
+            record_data['ISBN'] = record_data['ISBN'].astype(str)
+            transaction_data['ISBN'] = transaction_data['ISBN'].astype(str)
+            
             # Merge 'Due' column into transaction data
             transaction_data = transaction_data.merge(
                 record_data[['ISBN', 'Due']], on='ISBN', how='left'
