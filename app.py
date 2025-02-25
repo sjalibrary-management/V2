@@ -1234,11 +1234,18 @@ if check_password():
 
 
             with tab[1]:
-                transaction_data = pd.read_excel('Transaction.xlsx')
-                book_data = pd.read_excel('Database.xlsx')
+                # Load transaction and book data with ISBN as a string
+                transaction_data = pd.read_excel('Transaction.xlsx', dtype={'ISBN': str})
+                book_data = pd.read_excel('Database.xlsx', dtype={'ISBN': str})
+
+                # Strip spaces and ensure ISBN remains consistent
+                transaction_data['ISBN'] = transaction_data['ISBN'].astype(str).str.strip()
+                book_data['ISBN'] = book_data['ISBN'].astype(str).str.strip()
+
 
                 # Merge transaction data with book data to get "Due"
                 merged_data = transaction_data.merge(book_data[['ISBN', 'Due']], on='ISBN', how='left')
+
         
                 # Reorder columns
                 merged_data = merged_data[
