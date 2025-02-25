@@ -857,7 +857,18 @@ if check_password():
                         
             #-------------------------------------------------------- CHECK OUT ----------------------------------------------------------------------
         if selected == 'Check Out':
-
+            # Initialize session state for input fields
+            if 'checkout_isbn' not in st.session_state:
+                st.session_state.checkout_isbn = ''
+            if 'student_name' not in st.session_state:
+                st.session_state.student_name = ''
+            if 'section' not in st.session_state:
+                st.session_state.section = ''
+            if 'year_level' not in st.session_state:
+                st.session_state.year_level = None
+            if 'checkout_date' not in st.session_state:
+                st.session_state.checkout_date = dt.datetime.today().date()
+                
             st.subheader('Search Book to Check Out')
             search_term = st.text_input('Search by Book Title or Author', value='', key='search_term', placeholder='Enter search term')
             if search_term:
@@ -900,7 +911,7 @@ if check_password():
 
                 isbn = create_scanner_input('checkout_isbn')
                 student_name = st.text_input('Patron', value='', key='student_name', placeholder='Enter Name of Student')
-                checkout_date = st.date_input('Check Out Date', value=dt.today())
+                checkout_date = st.date_input('Check Out Date', value=dt.today().date())
 
                 col1, col2 = st.columns(2)
                 with col1:
@@ -960,6 +971,14 @@ if check_password():
                                 df.to_excel('Database.xlsx', index=False)
                                 st.success('Book has been checked out successfully.')
                                 log_transaction('Check Out', isbn, student_name, yearLevel, section)
+
+                                # Clear form fields after submission
+                                st.session_state.checkout_isbn = ''
+                                st.session_state.student_name = ''
+                                st.session_state.section = ''
+                                st.session_state.year_level = None
+                                st.session_state.checkout_date = dt.datetime.today().date()
+                                st.rerun()
             
 
 
