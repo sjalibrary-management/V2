@@ -960,6 +960,11 @@ if check_password():
                                 df.to_excel('Database.xlsx', index=False)
                                 st.success('Book has been checked out successfully.')
                                 log_transaction('Check Out', isbn, student_name, yearLevel, section)
+
+                                # Clear/reset the text fields after checkout
+                                st.session_state['checkout_isbn'] = ''
+                                st.session_state['student_name'] = ''
+                                st.session_state['section'] = ''
             
 
 
