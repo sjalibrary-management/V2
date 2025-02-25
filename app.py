@@ -387,9 +387,7 @@ if check_password():
         st.sidebar.image("images/logo.png")           
         with st.sidebar:
             selected = option_menu(
-                menu_title = 'Dashboard',
                 options = ['Home','Check Out','Check In', 'Record', 'Inventory', ],
-                menu_icon = 'speedometer2',
                 icons = ['house-fill', 'bookmark-check-fill',  'back', 'folder-fill', 'clipboard-data' ]
             )
         
