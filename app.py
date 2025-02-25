@@ -1010,46 +1010,47 @@ if check_password():
                 isbn = create_scanner_input('checkin_isbn')
                 date = st.date_input('Date', value=dt.date.today())
                 date = date.strftime('%Y-%m-%d')
+                
                 col1, col2 = st.columns(2)
                 with col1:
-                        year_level = st.selectbox('Year Level', options=['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'], index=None)
-
+                    year_level = st.selectbox('Year Level', options=['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'], index=None)
 
                 with col2:
-                        section = st.text_input('Section', value='', key='section', placeholder='Enter Section')
-                        submit_button = st.form_submit_button(label='Return Book')
-                        st.markdown('')
+                    section = st.text_input('Section', value='', key='section', placeholder='Enter Section')
 
-                if submit_button:
-                    if not isbn or not year_level or not section:
-                            st.warning('Please fill out all required fields.')
-                    else:
-                        if os.path.exists('Database.xlsx'):
-                            df = pd.read_excel('Database.xlsx', dtype={'ISBN': str})
-                            df['ISBN'] = df['ISBN'].str.strip()
-                                
-                            matching_books = df[df['ISBN'] == isbn.strip()]
-                                
-                            if len(matching_books) > 0:
-                                book_idx = matching_books.index[0]
-                                    
-                                # Clear all patron-related information
-                                df.at[book_idx, 'Patron'] = ''
-                                df.at[book_idx, 'Check Out Dates'] = ''
-                                df.at[book_idx, 'Year Level'] = ''
-                                df.at[book_idx, 'Section'] = ''
-                                df.at[book_idx, 'Due'] = ''
+                # ✅ Submit button correctly placed inside the form
+                submit_button = st.form_submit_button(label='Return Book')
 
-                                # Update book status after clearing patron information
-                                df = update_book_status(df)
-                                df.to_excel('Database.xlsx', index=False)
+            if submit_button:
+                if not isbn or not year_level or not section:
+                    st.warning('Please fill out all required fields.')
+                else:
+                    if os.path.exists('Database.xlsx'):
+                        df = pd.read_excel('Database.xlsx', dtype={'ISBN': str})
+                        df['ISBN'] = df['ISBN'].str.strip()
+                            
+                        matching_books = df[df['ISBN'] == isbn.strip()]
+                            
+                        if len(matching_books) > 0:
+                            book_idx = matching_books.index[0]
                                 
-                                st.success('Book has been checked in successfully.')
-                                log_transaction('Check In', isbn, year_level, section)
-                            else:
-                                st.error('Book not found in inventory.')
+                            # Clear all patron-related information
+                            df.at[book_idx, 'Patron'] = ''
+                            df.at[book_idx, 'Check Out Dates'] = ''
+                            df.at[book_idx, 'Year Level'] = ''
+                            df.at[book_idx, 'Section'] = ''
+                            df.at[book_idx, 'Due'] = ''
+
+                            # Update book status after clearing patron information
+                            df = update_book_status(df)
+                            df.to_excel('Database.xlsx', index=False)
+                            
+                            st.success('Book has been checked in successfully.')
+                            log_transaction('Check In', isbn, year_level, section)
                         else:
-                            st.error('Inventory database not found.')
+                            st.error('Book not found in inventory.')
+                    else:
+                        st.error('Inventory database not found.')
 
         #-------------------------------------------------------- RECORD ------------------------------------------------------------------------
 
