@@ -1074,199 +1074,129 @@ if check_password():
                             st.error('Inventory database not found.')
 
 
-        #-------------------------------------------------------- RECORD ------------------------------------------------------------------------
+#-------------------------------------------------------- RECORD ------------------------------------------------------------------------
 
-        if selected == 'Record':
+if selected == 'Record':
 
-            record_data = pd.read_excel('Database.xlsx')
-            total_books = int(record_data['Quantity'].sum()) 
-            borrow_books = int(record_data['Check Out Dates'].apply(count_borrowed_books).sum())  
-            available_books = total_books - borrow_books
+    record_data = pd.read_excel('Database.xlsx')
+    total_books = int(record_data['Quantity'].sum()) 
+    borrow_books = int(record_data['Check Out Dates'].apply(count_borrowed_books).sum())  
+    available_books = total_books - borrow_books
 
-            df_book_categories = record_data[record_data['Category'].notnull()]
-            book_categories = df_book_categories.groupby('Category')['Quantity'].sum()
-            df_cat = book_categories.reset_index()
+    df_book_categories = record_data[record_data['Category'].notnull()]
+    book_categories = df_book_categories.groupby('Category')['Quantity'].sum()
+    df_cat = book_categories.reset_index()
 
+    col1, col2, col3 = st.columns(3)
 
-          
-            col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown(
+            f"""
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #dcffff  100%);
+                        width: 100%;
+                        padding: 1rem; 
+                        border-radius: 0.5rem; 
+                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+                        text-align: center;">
+                <h3 style="font-size: 2rem; color: #001f54; "><i class="fa fa-book" style="margin-right: 10px; font-size: 2rem; color: #001f54;"></i>Number of Books</h3>
+                <p style="font-size: 4rem; font-weight: bold;">{total_books}</p>
+                <p style="font-size: 1rem;">Total Number of Books in the Library</p>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
 
+    with col2:
+        st.markdown(
+            f"""
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #dcffff  100%);
+                        width: 100%;
+                        padding: 1rem; 
+                        border-radius: 0.5rem; 
+                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+                        text-align: center;">
+                <h3 style="font-size: 2rem; color: #001f54;"><i class="fa fa-bookmark" style="margin-right: 10px; font-size: 2rem; color: #001f54;"></i>Out Books</h3>
+                <p style="font-size: 4rem; font-weight: bold;">{borrow_books}</p>
+                <p style="font-size: 1rem;">Total Borrowed Books in the Library</p>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
 
-            with col1:
+    with col3:
+        st.markdown(
+            f"""
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #dcffff 100%);
+                        width: 100%;
+                        padding: 1rem; 
+                        border-radius: 0.5rem; 
+                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+                        text-align: center;">
+                <h3 style="font-size: 2rem; color: #001f54;"><i class="fa fa-book-open" style="margin-right: 10px; font-size: 2rem; color: #001f54;"></i>Available Books</h3>
+                <p style="font-size: 4rem; font-weight: bold;">{available_books}</p>
+                <p style="font-size: 1rem;">Total Available Books in the Library</p>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
 
-                st.markdown(
-                    f"""
-                    <div style="background: linear-gradient(135deg, #ffffff 0%, #dcffff  100%);
-                                width: 100%;
-                                padding: 1rem; 
-                                border-radius: 0.5rem; 
-                                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
-                                text-align: center;">
-                        <h3 style="font-size: 2rem; color: #001f54; "><i class="fa fa-book" style="margin-right: 10px; font-size: 2rem; color: #001f54;"></i>Number of Books</h3>
-                        <p style="font-size: 4rem; font-weight: bold;">{total_books}</p>
-                        <p style="font-size: 1rem;">Total Number of Books in the Library</p>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
-                )
-                                
-            with col2:
-                st.markdown(
-                    f"""
-                    <div style="background: linear-gradient(135deg, #ffffff 0%, #dcffff  100%);
-                                width: 100%;
-                                padding: 1rem; 
-                                border-radius: 0.5rem; 
-                                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
-                                text-align: center;">
-                        <h3 style="font-size: 2rem; color: #001f54;"><i class="fa fa-bookmark" style="margin-right: 10px; font-size: 2rem; color: #001f54;"></i>Out Books</h3>
-                        <p style="font-size: 4rem; font-weight: bold;">{borrow_books}</p>
-                        <p style="font-size: 1rem;">Total Borrowed Books in the Library</p>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
-                )
+    st.markdown('----')
 
-            with col3:
-                st.markdown(
-                    f"""
-                    <div style="background: linear-gradient(135deg, #ffffff 0%, #dcffff 100%);
-                                width: 100%;
-                                padding: 1rem; 
-                                border-radius: 0.5rem; 
-                                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
-                                text-align: center;">
-                        <h3 style="font-size: 2rem; color: #001f54;"><i class="fa fa-book-open" style="margin-right: 10px; font-size: 2rem; color: #001f54;"></i>Available Books</h3>
-                        <p style="font-size: 4rem; font-weight: bold;">{available_books}</p>
-                        <p style="font-size: 1rem;">Total Available Books in the Library</p>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
-                )
-            st.markdown('')
+    if not df_cat.empty:    
+        fig = px.bar(df_cat, 
+                        x='Category',  
+                        y='Quantity',  
+                        color='Category',  
+                        template='seaborn'
+        )
 
-            st.markdown('----')
-            if not df_cat.empty:    
-                fig = px.bar(df_cat, 
-                                x='Category',  
-                                y='Quantity',  
-                                color='Category',  
-                                template='seaborn'
-                    )
+        fig.update_layout(
+            plot_bgcolor='rgba(230, 26, 26, 0)',  
+            paper_bgcolor='rgba(255, 255, 255, 0)', 
+            title='',
+            xaxis_title='',  
+            yaxis_title='', 
+            title_yanchor='bottom',
+            title_font=dict(
+                color='#162938',  
+                size=30
+            ),
+            xaxis=dict(
+                title=None,  
+                tickfont=dict(color='white')  
+            ),
+            yaxis=dict(
+                title='',
+                tickfont=dict(color='white')
+            )
+        )
 
-                    
-                fig.update_layout(
-                        plot_bgcolor='rgba(230, 26, 26, 0)',  
-                        paper_bgcolor='rgba(255, 255, 255, 0)', 
-                        title='',
-                        xaxis_title='',  
-                        yaxis_title='', 
-                        title_yanchor='bottom',
-                        title_font=dict(
-                            color='#162938',  
-                            size=30
-                        ),
-                        xaxis=dict(
-                            title=None,  
-                            tickfont=dict(color='white')  
-                        ),
-                        yaxis=dict(
-                            title='',
-                            tickfont=dict(color='white')
-                        )
-                    )
+        st.plotly_chart(fig, use_container_width=True)
 
-                
+    else:
+        st.warning('No data found.')
 
-                st.plotly_chart(fig, use_container_width=True)
-                    
-            else:
-                st.warning('No data found.')
-   
-                    
-                
-            st.markdown('----')
-            st.subheader('Find by Filter')
-            
-            tab = st.tabs(['Books', 'Transaction'])
+    st.markdown('----')
+    st.subheader('Find by Filter')
 
-            with tab[0]:
+    tab = st.tabs(['Books', 'Transaction'])
 
-                inventory_data = pd.read_excel('Database.xlsx')
+    with tab[1]:
+        transaction_data = pd.read_excel('Transaction.xlsx')
 
-                col1, col2 = st.columns(2)
-                with col1:
-                
+        today = pd.Timestamp.today().date()
+        transaction_data['Due'] = pd.to_datetime(transaction_data['Due']).dt.date
+        transaction_data['Status'] = transaction_data['Due'].apply(lambda x: "Overdue" if x < today else "Successful")
 
-                    sub_col = st.columns(3)
+        ordered_columns = ['Transaction ID', 'Patron Name', 'Transaction Type', 'Due', 'Status', 
+                           'ISBN', 'Book Title', 'Author', 'Year Level', 'Section']
 
-                    with sub_col[0]:
-                        selected_categories = st.multiselect(
-                            'Filter by Category:',
-                            inventory_data['Category'].unique().tolist()
-                        )
-                    with sub_col[2]:
-                        selected_language = st.multiselect(
-                            'Filter by Language:',
-                            inventory_data['Language'].unique().tolist()
-                        )
-                    with sub_col[1]:
-                        selected_type = st.multiselect(
-                            'Filter by Type:',
-                            inventory_data['Type'].unique().tolist()
-                        )
+        remaining_columns = [col for col in transaction_data.columns if col not in ordered_columns]
+        final_columns = ordered_columns + remaining_columns
 
-                # Apply filters only if at least one is selected
-                if selected_categories or selected_type or selected_language:
-                    filtered_data = inventory_data.copy()
+        transaction_data = transaction_data[final_columns]
 
-                    if selected_categories:
-                        filtered_data = filtered_data[filtered_data['Category'].isin(selected_categories)]
-                    if selected_language:
-                        filtered_data = filtered_data[filtered_data['Language'].isin(selected_language)]
-                    if selected_type:
-                        filtered_data = filtered_data[filtered_data['Type'].isin(selected_type)]
-
-                    st.dataframe(filtered_data, use_container_width=True)
-
-
-
-            with tab[1]:
-                transaction_data = pd.read_excel('Transaction.xlsx')
-
-                col1, col2 = st.columns(2)
-                with col1:
-                  
-                    sub_col = st.columns(3)
-
-                    with sub_col[0]:
-                        selected_types = st.multiselect(
-                            'Filter by Transaction Type:',
-                            transaction_data['Transaction Type'].unique().tolist()
-                        )
-                    with sub_col[1]:
-                        selected_year_level = st.multiselect(
-                            'Filter by Year Level:',
-                            transaction_data['Year Level'].unique().tolist()
-                        )
-                    with sub_col[2]:
-                        selected_section = st.multiselect(
-                            'Filter by Section:',
-                            transaction_data['Section'].unique().tolist()
-                        )
-
-                # Apply filters only if at least one filter is selected
-                if selected_types or selected_year_level or selected_section:
-                    filtered_data = transaction_data.copy()
-
-                    if selected_types:
-                        filtered_data = filtered_data[filtered_data['Transaction Type'].isin(selected_types)]
-                    if selected_year_level:
-                        filtered_data = filtered_data[filtered_data['Year Level'].isin(selected_year_level)]
-                    if selected_section:
-                        filtered_data = filtered_data[filtered_data['Section'].isin(selected_section)]
-
-                    st.dataframe(filtered_data, use_container_width=True)
+        st.dataframe(transaction_data, use_container_width=True)
 
 
     def main():
