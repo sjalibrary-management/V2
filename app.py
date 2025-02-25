@@ -1085,6 +1085,16 @@ if check_password():
             borrow_books = int(record_data['Check Out Dates'].apply(count_borrowed_books).sum())  
             available_books = total_books - borrow_books
 
+            # Merge 'Due' column into transaction data
+            transaction_data = transaction_data.merge(
+                record_data[['ISBN', 'Due']], on='ISBN', how='left'
+            )
+
+            # Reorder columns
+            transaction_data = transaction_data[
+                ['Transaction ID', 'Patron Name', 'Transaction Type', 'Due', 'Status', 'ISBN', 'Book Title', 'Author', 'Year Level', 'Section']
+            ]
+
         
             df_book_categories = record_data[record_data['Category'].notnull()]
             book_categories = df_book_categories.groupby('Category')['Quantity'].sum()
