@@ -880,10 +880,6 @@ if check_password():
                     st.warning('No inventory data found.')
 
             st.markdown("---")
-
-            if 'form_counter' not in st.session_state:
-                st.session_state.form_counter = 0
-                
             with st.form(key='check_out_form'):
                 st.markdown(
                     """
@@ -964,11 +960,6 @@ if check_password():
                                 df.to_excel('Database.xlsx', index=False)
                                 st.success('Book has been checked out successfully.')
                                 log_transaction('Check Out', isbn, student_name, yearLevel, section)
-
-                               # Increment the form counter to create new widget keys on rerun.
-                                st.session_state.form_counter += 1
-                                # Rerun the app to reinitialize the form with fresh (empty) fields.
-                                st.experimental_rerun()
             
 
 
