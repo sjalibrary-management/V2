@@ -29,7 +29,7 @@ def check_password():
         return True
 
     dir = Path(__file__).parent if '__file__' in globals() else Path.cwd()
-    bg_path = dir / "images" / "SJA.png"
+    bg_path = dir / "images" / "BIBLIOGO.png"
     
     def get_base64_encoded_image(bg_path):
         with open(bg_path, "rb") as img_file:
@@ -124,7 +124,7 @@ if check_password():
 
     def set_background():
         current_dir = Path(__file__).parent if '__file__' in globals() else Path.cwd()
-        image_path = current_dir / "images" / "SJA.png"
+        image_path = current_dir / "images" / "BIBLIOGO.png"
         
         page_bg_img = f"""
         <style>
