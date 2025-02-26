@@ -1246,6 +1246,10 @@ if check_password():
                 # Merge transaction data with book data to get "Due"
                 merged_data = transaction_data.merge(book_data[['ISBN', 'Due']], on='ISBN', how='left')
 
+                # Convert and format the Transaction Date column to show only the date
+                 if 'Transaction Date' in merged_data.columns:
+                    merged_data['Transaction Date'] = pd.to_datetime(merged_data['Transaction Date']).dt.strftime('%Y-%m-%d')
+
         
                 # Reorder columns
                 merged_data = merged_data[
