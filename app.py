@@ -740,6 +740,11 @@ if check_password():
 
             
 
+            
+                   
+
+
+            
 
             with tab[0]:
                 st.title('')
@@ -1239,7 +1244,7 @@ if check_password():
 
 
                 # Merge transaction data with book data to get "Due"
-                _data = transaction_data.merge(book_data[['ISBN', 'Due']], on='ISBN', how='left')
+                merged_data = transaction_data.merge(book_data[['ISBN', 'Due']], on='ISBN', how='left')
 
                 # Convert and format the Transaction Date column to show only the date
                 if 'Transaction Date' in merged_data.columns:
@@ -1248,9 +1253,10 @@ if check_password():
         
                 # Reorder columns
                 merged_data = merged_data[
-                    ['Transaction ID', 'Patron Name', 'Year Level', 'Section', 'Transaction Type', 'Transaction Date', 'Due',  
+                     ['Transaction ID', 'Patron Name', 'Year Level', 'Section', 'Transaction Type', 'Transaction Date', 'Due',  
                      'ISBN', 'Book Title', 'Author', 'Status']
                 ]
+
 
 
                 col1, col2 = st.columns(2)
