@@ -1249,8 +1249,8 @@ if check_password():
         
                 # Reorder columns
                 merged_data = merged_data[
-                    ['Transaction ID', 'Patron Name', 'Transaction Type', 'Due', 'Status', 
-                     'ISBN', 'Book Title', 'Author', 'Year Level', 'Section']
+                    ['Transaction ID', 'Patron Name', 'Year Level', 'Section', 'Transaction Type', 'Transaction Date', 'Due',  
+                     'ISBN', 'Book Title', 'Author', 'Status']
                 ]
 
 
