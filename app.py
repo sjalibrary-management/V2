@@ -1,3 +1,4 @@
+#3122025 code
 import streamlit as st
 import pandas as pd
 from streamlit_option_menu import option_menu
@@ -29,7 +30,7 @@ def check_password():
         return True
 
     dir = Path(__file__).parent if '__file__' in globals() else Path.cwd()
-    bg_path = dir / "images" / "SJA.png"
+    bg_path = dir / "images" / "BIBLIOGO.png"
     
     def get_base64_encoded_image(bg_path):
         with open(bg_path, "rb") as img_file:
@@ -124,7 +125,7 @@ if check_password():
 
     def set_background():
         current_dir = Path(__file__).parent if '__file__' in globals() else Path.cwd()
-        image_path = current_dir / "images" / "SJA.png"
+        image_path = current_dir / "images" / "BIBLIOGO.png"
         
         page_bg_img = f"""
         <style>
@@ -387,10 +388,9 @@ if check_password():
         st.sidebar.image("images/logo.png")           
         with st.sidebar:
             selected = option_menu(
-                menu_title = 'Dashboard',
-                options = ['Home','Check Out','Check In', 'Record', 'Inventory', ],
-                menu_icon = 'speedometer2',
-                icons = ['house-fill', 'bookmark-check-fill',  'back', 'folder-fill', 'clipboard-data' ]
+                menu_title=None, 
+                options=['Home', 'Check Out', 'Check In', 'Record', 'Inventory'],
+                icons=['house-fill', 'bookmark-check-fill', 'back', 'folder-fill', 'clipboard-data']
             )
         
 
@@ -970,18 +970,17 @@ if check_password():
                             st.error('Inventory database not found.')
 
 
-
-            #-------------------------------------------------------- CHECK IN ---------------------------------------------------------------------
+        #-------------------------------------------------------- CHECK IN ---------------------------------------------------------------------
         if selected == 'Check In':
             st.subheader('Search Book to Check In')
-            search_term = st.text_input('Search by ISBN or Patron', value='', key='search_term', placeholder='Enter search term')
+            search_term = st.text_input('Search by ISBN', value='', key='search_term', placeholder='Enter ISBN')
             
             if search_term:
                 if os.path.exists('Database.xlsx'):
                     df = pd.read_excel('Database.xlsx')
                             
                     search_results = df[df.apply(
-                            lambda row: search_term.lower() in str(row['ISBN']).lower() or search_term.lower() in str(row['Patron']).lower(), axis=1
+                            lambda row: search_term.lower() in str(row['ISBN']).lower(), axis=1
                         )]
                             
                     if not search_results.empty:
@@ -1012,13 +1011,11 @@ if check_password():
                     )
                     
                 isbn = create_scanner_input('checkin_isbn')
-                student_name = st.text_input('Patron', value='', key='student_name', placeholder='Enter Name of Student')
                 date = st.date_input('Date', value=dt.today())
                 date = date.strftime('%Y-%m-%d')
                 col1, col2 = st.columns(2)
                 with col1:
                         yearLevel = st.selectbox('Year Level', options=['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'], index=None)
-
 
                 with col2:
                         section = st.text_input('Section', value='', key='section', placeholder='Enter Section')
@@ -1026,7 +1023,7 @@ if check_password():
                         st.markdown('')
 
                 if submit_button:
-                    if not isbn or not student_name or not yearLevel or not section:
+                    if not isbn or not yearLevel or not section:
                             st.warning('Please fill out all required fields.')
                     else:
                         if os.path.exists('Database.xlsx'):
@@ -1051,36 +1048,32 @@ if check_password():
                                     sections = [s.strip() for s in section_list.split(',')] if section_list else []
                                     due_dates = [d.strip() for d in due_date_list.split(',')] if due_date_list else [] 
                                         
-                                    if student_name in patrons:
-                                            idx = patrons.index(student_name)
-                                            
-                                            patrons.pop(idx)
-                                            checkouts.pop(idx)
-                                            due_dates.pop(idx)
-                                            if idx < len(years):
-                                                years.pop(idx)
-                                            if idx < len(sections):
-                                                sections.pop(idx)
-                                            
-                                            df.at[book_idx, 'Patron'] = ', '.join(patrons) if patrons else ''
-                                            df.at[book_idx, 'Check Out Dates'] = ', '.join(checkouts) if checkouts else ''
-                                            df.at[book_idx, 'Year Level'] = ', '.join(years) if years else ''
-                                            df.at[book_idx, 'Section'] = ', '.join(sections) if sections else ''
-                                            df.at[book_idx, 'Due'] = ', '.join(due_dates) if sections else ''
-                                            
-                                            # Update status after modifying data
-                                            df = update_book_status(df)
-                                            df.to_excel('Database.xlsx', index=False)
-                                            st.success('Book has been checked in successfully.')
-                                            log_transaction('Check In', isbn, student_name, yearLevel, section)
-                                    else:
-                                        st.error('The patron name does not match the record.')
+                                    student_name = patrons.pop(0)  # Automatically select the first patron
+                                    checkouts.pop(0)
+                                    due_dates.pop(0)
+                                    if years:
+                                        years.pop(0)
+                                    if sections:
+                                        sections.pop(0)
+                                    
+                                    df.at[book_idx, 'Patron'] = ', '.join(patrons) if patrons else ''
+                                    df.at[book_idx, 'Check Out Dates'] = ', '.join(checkouts) if checkouts else ''
+                                    df.at[book_idx, 'Year Level'] = ', '.join(years) if years else ''
+                                    df.at[book_idx, 'Section'] = ', '.join(sections) if sections else ''
+                                    df.at[book_idx, 'Due'] = ', '.join(due_dates) if due_dates else ''
+                                    
+                                    # Update status after modifying data
+                                    df = update_book_status(df)
+                                    df.to_excel('Database.xlsx', index=False)
+                                    st.success(f'Book has been checked in successfully for {student_name}.')
+                                    log_transaction('Check In', isbn, student_name, yearLevel, section)
                                 else:
-                                        st.error('No patron found for this book.')
+                                    st.error('No patron found for this book.')
                             else:
                                 st.error('Book not found in inventory.')
                         else:
                             st.error('Inventory database not found.')
+
 
 
 
@@ -1242,7 +1235,30 @@ if check_password():
 
 
             with tab[1]:
-                transaction_data = pd.read_excel('Transaction.xlsx')
+                # Load transaction and book data with ISBN as a string
+                transaction_data = pd.read_excel('Transaction.xlsx', dtype={'ISBN': str})
+                book_data = pd.read_excel('Database.xlsx', dtype={'ISBN': str})
+
+                # Strip spaces and ensure ISBN remains consistent
+                transaction_data['ISBN'] = transaction_data['ISBN'].astype(str).str.strip()
+                book_data['ISBN'] = book_data['ISBN'].astype(str).str.strip()
+
+
+                # Merge transaction data with book data to get "Due"
+                merged_data = transaction_data.merge(book_data[['ISBN', 'Due']], on='ISBN', how='left')
+
+                # Convert and format the Transaction Date column to show only the date
+                if 'Transaction Date' in merged_data.columns:
+                    merged_data['Transaction Date'] = pd.to_datetime(merged_data['Transaction Date']).dt.strftime('%Y-%m-%d')
+
+        
+                # Reorder columns
+                merged_data = merged_data[
+                     ['Patron Name', 'Year Level', 'Section', 'Transaction Type', 'Transaction Date', 'Due',  
+                     'ISBN', 'Book Title', 'Author', 'Status']
+                ]
+
+
 
                 col1, col2 = st.columns(2)
                 with col1:
@@ -1267,7 +1283,7 @@ if check_password():
 
                 # Apply filters only if at least one filter is selected
                 if selected_types or selected_year_level or selected_section:
-                    filtered_data = transaction_data.copy()
+                    filtered_data = merged_data.copy()
 
                     if selected_types:
                         filtered_data = filtered_data[filtered_data['Transaction Type'].isin(selected_types)]
@@ -1277,6 +1293,7 @@ if check_password():
                         filtered_data = filtered_data[filtered_data['Section'].isin(selected_section)]
 
                     st.dataframe(filtered_data, use_container_width=True)
+
 
 
     def main():
