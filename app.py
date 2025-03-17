@@ -151,12 +151,17 @@ if check_password():
     with open('style.css') as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-
     def update_book_status(df):
         def count_borrowers(patron_str):
             if pd.isna(patron_str) or patron_str == '':
                 return 0
             return len([p for p in str(patron_str).split(',') if p.strip()])
+        
+        
+        df = df.copy()
+        # Ensure Patron column exists
+        if 'Patron' not in df.columns:
+            df['Patron'] = ''
         
         df['Borrowers_Count'] = df['Patron'].apply(count_borrowers)
         df['Status'] = df.apply(lambda row: 'Inactive' if row['Borrowers_Count'] >= row['Quantity'] else 'Active', axis=1)
@@ -167,9 +172,11 @@ if check_password():
     def save_inventory_to_xlsx(data, file_path='Database.xlsx'):
         if os.path.exists(file_path):
             existing_data = pd.read_excel(file_path, dtype={'ISBN': str})
-            existing_data['ISBN'] = existing_data['ISBN'].str.strip()
+            # Ensure ISBN is treated as string and stripped
+            existing_data['ISBN'] = existing_data['ISBN'].astype(str).str.strip()
+            data['ISBN'] = str(data['ISBN']).strip()
             
-            matching_book = existing_data[existing_data['ISBN'] == data['ISBN'].strip()]
+            matching_book = existing_data[existing_data['ISBN'] == data['ISBN']]
             
             if not matching_book.empty:
                 book_idx = matching_book.index[0]
@@ -738,6 +745,7 @@ if check_password():
                                 st.success(f'Updated quantity for existing book. New total: {book_data["Quantity"]}')
                             else:
                                 st.success('New item has been added successfully!')
+                            st.rerun()
 
             
 
