@@ -169,20 +169,26 @@ if check_password():
         return df
     
 
+
     def save_inventory_to_xlsx(data, file_path='Database.xlsx'):
         if os.path.exists(file_path):
             existing_data = pd.read_excel(file_path, dtype={'ISBN': str})
             # Ensure ISBN is treated as string and stripped
             existing_data['ISBN'] = existing_data['ISBN'].astype(str).str.strip()
-            data['ISBN'] = str(data['ISBN']).strip()
             
-            matching_book = existing_data[existing_data['ISBN'] == data['ISBN']]
+            # Convert the new ISBN to string and strip whitespace
+            isbn = str(data['ISBN']).strip()
+            
+            # Check if the book already exists
+            matching_book = existing_data[existing_data['ISBN'] == isbn]
             
             if not matching_book.empty:
                 book_idx = matching_book.index[0]
                 existing_data.at[book_idx, 'Quantity'] += data['Quantity']
                 updated_data = existing_data
             else:
+                # For a new book, ensure ISBN is properly set
+                data['ISBN'] = isbn
                 updated_data = pd.concat([existing_data, pd.DataFrame([data])], ignore_index=True)
         else:
             updated_data = pd.DataFrame([data])
