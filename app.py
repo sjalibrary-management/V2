@@ -183,7 +183,7 @@ if check_password():
 
 
 
-    def _to_gsheet(new_data):
+    def save_inventory_to_gsheet(new_data):
         existing_inventory = conn.read(worksheet="Sheet1", usecols=list(range(17)), dtype={'ISBN': str})
 
         # Ensure ISBN is treated as a string
