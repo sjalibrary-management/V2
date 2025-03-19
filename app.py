@@ -195,7 +195,7 @@ if check_password():
         
         updated_data = update_book_status(updated_data)
         updated_data.to_excel(file_path, index=False)
-        print(f"Data successfully saved to {file_path}")
+        st.write(f"Data successfully saved to {file_path}")
 
         return updated_data
 
