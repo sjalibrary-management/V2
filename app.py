@@ -183,7 +183,7 @@ if check_password():
 
 
 
-    def save_inventory_to_gsheet(new_data):
+    def _to_gsheet(new_data):
         existing_inventory = conn.read(worksheet="Sheet1", usecols=list(range(17)), dtype={'ISBN': str})
 
         # Ensure ISBN is treated as a string
@@ -864,7 +864,7 @@ if check_password():
                                 'Check Out Dates': ''
                             }
 
-                            updated_df = save_inventory_to_xlsx(inventory_data)
+                            updated_df = save_inventory_to_gsheet(inventory_data)
 
                             st.success(f"Book **{book['title']}** Added Successfully!")
                             del st.session_state.fetched_book  
