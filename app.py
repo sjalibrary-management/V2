@@ -10,10 +10,18 @@ import plotly.express as px
 import base64
 import hashlib
 import requests
+from streamlit_gsheets import GSheetsConnection
+
 
 st.set_page_config(layout="wide")
 
+# Create a connection to Google Sheets
+conn = st.connection("gsheets", type=GSheetsConnection)
 
+# Initialize session state for existing data if it doesn't exist
+if 'existing_data' not in st.session_state:
+    st.session_state.existing_data = conn.read(worksheet="Sheet1", usecols=list(range(17)), ttl=6)
+    st.session_state.existing_data = st.session_state.existing_data.dropna(how="all")
 
 st.markdown("""
     <style>
@@ -153,50 +161,51 @@ if check_password():
 
     def update_book_status(df):
         def count_borrowers(patron_str):
-            if pd.isna(patron_str) or patron_str == '':
+            if pd.isna(patron_str) or patron_str.strip() == '':
                 return 0
             return len([p for p in str(patron_str).split(',') if p.strip()])
-        
-        
+
         df = df.copy()
-        # Ensure Patron column exists
+
+        # Ensure the necessary columns exist
         if 'Patron' not in df.columns:
             df['Patron'] = ''
+        if 'Quantity' not in df.columns:
+            df['Quantity'] = 1  # Default to 1 if missing
         
         df['Borrowers_Count'] = df['Patron'].apply(count_borrowers)
+
+        # Update status: 'Inactive' if all copies are borrowed, otherwise 'Active'
         df['Status'] = df.apply(lambda row: 'Inactive' if row['Borrowers_Count'] >= row['Quantity'] else 'Active', axis=1)
-        df.drop('Borrowers_Count', axis=1, inplace=True)
+
+        df.drop('Borrowers_Count', axis=1, inplace=True)  # Remove temp column
         return df
-    
 
 
-    def save_inventory_to_xlsx(data, file_path='Database.xlsx'):
-        if os.path.exists(file_path):
-            existing_data = pd.read_excel(file_path, dtype={'ISBN': str})
-            # Ensure ISBN is treated as string and stripped
-            existing_data['ISBN'] = existing_data['ISBN'].astype(str).str.strip()
-            
-            # Convert the new ISBN to string and strip whitespace
-            isbn = str(data['ISBN']).strip()
-            
-            # Check if the book already exists
-            matching_book = existing_data[existing_data['ISBN'] == isbn]
-            
-            if not matching_book.empty:
-                book_idx = matching_book.index[0]
-                existing_data.at[book_idx, 'Quantity'] += data['Quantity']
-                updated_data = existing_data
-            else:
-                # For a new book, ensure ISBN is properly set
-                data['ISBN'] = isbn
-                updated_data = pd.concat([existing_data, pd.DataFrame([data])], ignore_index=True)
-        else:
-            updated_data = pd.DataFrame([data])
+
+    def save_inventory_to_gsheet(new_data):
+        existing_inventory = conn.read(worksheet="Sheet1", usecols=list(range(17)), dtype={'ISBN': str})
+
+        # Ensure ISBN is treated as a string
+        existing_inventory['ISBN'] = existing_inventory['ISBN'].astype(str).str.strip()
         
-        updated_data = update_book_status(updated_data)
-        updated_data.to_excel(file_path, index=False)
+        # Check if book already exists
+        matching_books = existing_inventory[existing_inventory['ISBN'] == new_data['ISBN'].strip()]
+        
+        if not matching_books.empty:
+            # Update quantity if book exists
+            index = matching_books.index[0]
+            existing_inventory.at[index, 'Quantity'] += new_data['Quantity']
+        else:
+            # Append new book
+            new_row = pd.DataFrame([new_data])
+            existing_inventory = pd.concat([existing_inventory, new_row], ignore_index=True)
 
-        return updated_data
+        # Save back to Google Sheets
+        conn.update(worksheet="Sheet1", data=existing_inventory)
+        
+        return existing_inventory
+
 
 
     def count_borrowed_books(patron_string):
@@ -209,49 +218,40 @@ if check_password():
         return isbn
     
     def log_transaction(transaction_type, isbn, student_name, year_level, section):    
-        transaction_file = 'Transaction.xlsx'
-        if os.path.exists(transaction_file):
-            transactions_df = pd.read_excel(transaction_file)
-        else:
-            transactions_df = pd.DataFrame(columns=[
-                'Transaction ID', 
-                'Transaction Type', 
-                'ISBN', 
-                'Book Title',
-                'Author',
-                'Patron Name', 
-                'Year Level', 
-                'Section', 
-                'Transaction Date',
-                'Status'
-            ])
+        existing_transactions = conn.read(worksheet="Sheet2", usecols=list(range(12)))
+        
+        # Ensure proper data structure
+        columns = [
+            'Transaction ID', 'Transaction Type', 'ISBN', 'Book Title', 'Author',
+            'Patron Name', 'Year Level', 'Section', 'Transaction Date', 'Status'
+        ]
+        
+        if existing_transactions.empty:
+            existing_transactions = pd.DataFrame(columns=columns)
 
         isbn = str(isbn).strip()
-        
-        try:
-            inventory_df = pd.read_excel('Database.xlsx', dtype={'ISBN': str})  
 
+        try:
+            inventory_df = conn.read(worksheet="Sheet1", usecols=list(range(10)), dtype={'ISBN': str})
             inventory_df['ISBN'] = inventory_df['ISBN'].str.strip()
             
             matching_books = inventory_df[inventory_df['ISBN'] == isbn]
             
             if matching_books.empty:
-                print(f"No book found with ISBN: {isbn}")
                 book_title = "Not Found"
                 book_author = "Not Found"
             else:
                 book_details = matching_books.iloc[0]
                 book_title = book_details['Book Title']
                 book_author = book_details['Author']
-                print(f"Found book: {book_title} by {book_author}")  
-                
+                    
         except Exception as e:
             print(f"Error accessing inventory: {str(e)}")
             book_title = "Error"
             book_author = "Error"
 
-        new_transaction = {
-            'Transaction ID': len(transactions_df) + 1,
+        new_transaction = pd.DataFrame([{
+            'Transaction ID': len(existing_transactions) + 1,
             'Transaction Type': transaction_type,
             'Transaction Date': dt.today().strftime('%Y-%m-%d %H:%M:%S'),
             'ISBN': isbn,
@@ -261,16 +261,19 @@ if check_password():
             'Year Level': year_level,
             'Section': section,
             'Status': 'Successful'
-        }
+        }])
+
+        updated_transactions = pd.concat([existing_transactions, new_transaction], ignore_index=True)
         
-        transactions_df = pd.concat([transactions_df, pd.DataFrame([new_transaction])], ignore_index=True)
-        transactions_df.to_excel(transaction_file, index=False)
+        # Save to Google Sheets (Sheet2)
+        conn.update(worksheet="Sheet2", data=updated_transactions)
+
 
     def get_transaction_history(isbn=None, student_name=None):
+        transactions_df = conn.read(worksheet="Sheet2", usecols=list(range(10)))
 
-        if not os.path.exists('Transaction.xlsx'):
-            return pd.DataFrame()     
-        transactions_df = pd.read_excel('Transaction.xlsx')
+        if transactions_df.empty:
+            return pd.DataFrame()
 
         if isbn:
             transactions_df = transactions_df[transactions_df['ISBN'] == isbn]
@@ -278,14 +281,20 @@ if check_password():
             transactions_df = transactions_df[transactions_df['Patron Name'] == student_name]
             
         return transactions_df
+
     
     def load_inventory():
-        if os.path.exists('Database.xlsx'):
-            return pd.read_excel('Database.xlsx', dtype={'ISBN': str})
-        return None
+        return conn.read(worksheet="Sheet1", usecols=list(range(17)))
+    def load_transaction():
+        return conn.read(worksheet="Sheet2", usecols=list(range(10)))
+    
+    
+    
+    
+    
 
     def save_inventory(df):
-        df.to_excel('Database.xlsx', index=False)
+        conn.update(worksheet="Sheet1", data=df)
 
     def edit_inventory_item(df, isbn, updates):
         try:
@@ -586,54 +595,60 @@ if check_password():
                     st.error('No inventory database found.')
 
 
-                with tab[2]:
-                    st.subheader('Inventory Record')
-                    record_data = pd.read_excel('Database.xlsx')
-                    sub_tab = st.tabs(['Active Books', 'Inactive Books'])
+            with tab[2]:
+                st.subheader('Inventory Record')
+                
+                # Read from Google Sheets instead of Excel
+                record_data = conn.read(worksheet="Sheet1", usecols=list(range(17)), dtype={'ISBN': str})
+                
+                sub_tab = st.tabs(['Active Books', 'Inactive Books'])
+                
+                with sub_tab[0]:
+                    st.subheader('Active Books')
+
+                    active_books = record_data[record_data['Status'] == 'Active']
                     
-                    with sub_tab[0]:
-                        st.subheader('Active Books')
+                    ft_col_list_active = ['Quantity', 'Book Title', 'Author', 'ISBN', 'Type', 'Category', 'Publishing Date', 'No Pages', 'Status']
+                    column_widths_active = [1, 4, 4, 4, 2, 2, 2, 1, 2]  
 
-                        active_books = df[df['Status'] == 'Active']
-                        
-                        ft_col_list_active = ['Quantity', 'Book Title', 'Author', 'ISBN', 'Type','Category', 'Publishing Date', 'No Pages', 'Status']
-                        column_widths_active = [1, 4, 4, 4, 2, 2, 2, 1, 2]  
+                    active_books_table = go.Figure(
+                        data=[go.Table(
+                            columnwidth=column_widths_active,
+                            hoverlabel=dict(align='auto'),
+                            header=dict(
+                                values=[f"<b>{col}</b>" for col in ft_col_list_active],  
+                                font_color='white',
+                                font_size=12,
+                                align='left',
+                                height=18,
+                                fill_color='#ff7b00' 
+                            ),
+                            cells=dict(
+                                values=[active_books[col] for col in ft_col_list_active], 
+                                font_size=12,
+                                height=24,
+                                align='left',
+                                font_color='black'
+                            )
+                        )]
+                    )
+                    row_count = len(active_books)
+                    min_height = 200 
+                    max_height = 700
 
-                        active_books_table = go.Figure(
-                            data=[go.Table(
-                                columnwidth=column_widths_active,
-                                hoverlabel=dict(align='auto'),
-                                header=dict(
-                                    values=[f"<b>{col}</b>" for col in ft_col_list_active],  
-                                    font_color='white',
-                                    font_size=12,
-                                    align='left',
-                                    height=18,
-                                    fill_color='#ff7b00' 
-                                ),
-                                cells=dict(
-                                    values=[active_books[col] for col in ft_col_list_active], 
-                                    font_size=12,
-                                    height=24,
-                                    align='left',
-                                    font_color='black'
-                                )
-                            )]
-                        )
-                        row_count = len(active_books)
-                        min_height = 200 
-                        max_height = 700
+                    table_height = min(max_height, max(min_height, row_count * 30 + 80))
 
-                        table_height = min(max_height, max(min_height, row_count * 30 + 80))
+                    active_books_table.update_layout(
+                        margin=dict(t=0, b=0, l=0, r=0),
+                        height=table_height,
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)'
+                    )
 
-                        active_books_table.update_layout(
-                            margin=dict(t=0, b=0, l=0, r=0),
-                            height=table_height,
-                            paper_bgcolor='rgba(0,0,0,0)',
-                            plot_bgcolor='rgba(0,0,0,0)'
-                        )
+                    st.plotly_chart(active_books_table, use_container_width=True)
 
-                        st.plotly_chart(active_books_table, use_container_width=True)
+               
+
 
                     with sub_tab[1]:
                         st.subheader('Inactive Books')
@@ -727,14 +742,14 @@ if check_password():
                         
 
                     if submit_button:
-                        if not book_title or not author or not isbn or not publishing_date or not quantity or not no_pages or not type or not publisher or not category or not language :
+                        if not book_title or not author or not isbn or not publishing_date or not quantity or not no_pages or not type or not publisher or not category or not language:
                             st.warning('Please fill out all fields.')
                         else:
                             inventory_data = {
                                 'Date': dt.today().strftime('%Y-%m-%d'),
                                 'Book Title': book_title,
                                 'Author': author,
-                                'ISBN': isbn,
+                                'ISBN': isbn.strip(),
                                 'Publisher': publisher,
                                 'Type': type,
                                 'Category': category,
@@ -742,11 +757,12 @@ if check_password():
                                 'Quantity': quantity,
                                 'No Pages': no_pages,
                                 'Patron': '',
-                                'Check Out Dates': ''
+                                'Check Out Dates': '',
+                                'Status': 'Active'
                             }
 
-                            updated_df = save_inventory_to_xlsx(inventory_data)
-   
+                            updated_df = save_inventory_to_gsheet(inventory_data)
+
                             if len(updated_df[updated_df['ISBN'] == isbn.strip()]) > 0:
                                 book_data = updated_df[updated_df['ISBN'] == isbn.strip()].iloc[0]
                                 st.success(f'Updated quantity for existing book. New total: {book_data["Quantity"]}')
@@ -754,13 +770,8 @@ if check_password():
                                 st.success('New item has been added successfully!')
                             st.rerun()
 
-            
 
-            
-                   
-
-
-            
+                
 
             with tab[0]:
                 st.title('')
@@ -873,44 +884,33 @@ if check_password():
                         
             #-------------------------------------------------------- CHECK OUT ----------------------------------------------------------------------
         if selected == 'Check Out':
-
             st.subheader('Search Book to Check Out')
             search_term = st.text_input('Search by Book Title or Author', value='', key='search_term', placeholder='Enter search term')
+
             if search_term:
-                if os.path.exists('Database.xlsx'):
-                    df = pd.read_excel('Database.xlsx')
-                    
-                    # Ensure that 'Book Title' and 'Author' are strings, handling NaN values
-                    search_results = df[df.apply(
-                        lambda row: (str(row['Book Title']).lower() if isinstance(row['Book Title'], str) else '').find(search_term.lower()) != -1 or 
-                                    (str(row['Author']).lower() if isinstance(row['Author'], str) else '').find(search_term.lower()) != -1,
-                        axis=1
-                    )]
-                    
-                    if not search_results.empty:
-                        st.dataframe(search_results[['Book Title', 'Author', 'ISBN', 'Quantity', 'Type', 'Category', 'No Pages', 'Publishing Date', 'Publisher', 'Language']],
-                                         use_container_width=True)
-                    else:
-                        st.warning('No matching records found.')
+                df = conn.read(worksheet="Sheet1")
+
+                # Ensure 'Book Title' and 'Author' are strings, handling NaN values
+                search_results = df[df.apply(
+                    lambda row: (str(row['Book Title']).lower() if isinstance(row['Book Title'], str) else '').find(search_term.lower()) != -1 or 
+                                (str(row['Author']).lower() if isinstance(row['Author'], str) else '').find(search_term.lower()) != -1,
+                    axis=1
+                )]
+
+                if not search_results.empty:
+                    st.dataframe(search_results[['Book Title', 'Author', 'ISBN', 'Quantity', 'Type', 'Category', 'No Pages', 'Publishing Date', 'Publisher', 'Language']],
+                                use_container_width=True)
                 else:
-                    st.warning('No inventory data found.')
+                    st.warning('No matching records found.')
 
             st.markdown("---")
+            
             with st.form(key='check_out_form'):
                 st.markdown(
                     """
-                    <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
-                        .check-out-form-title {
-                            font-family: 'Poppins', sans-serif;
-                            font-size: 28px;
-                            color: #2a2a2a;
-                            text-align: center;
-                        }
-                    </style>
-                    <h1 class="check-out-form-title">Check Out Book</h1>
+                    <h1 style="font-family: Poppins, sans-serif; font-size: 28px; text-align: center;">Check Out Book</h1>
                     <p style="text-align: center;">Fill out the form to check out a book.</p>
-                    """, 
+                    """,
                     unsafe_allow_html=True
                 )
 
@@ -920,174 +920,150 @@ if check_password():
 
                 col1, col2 = st.columns(2)
                 with col1:
-                        yearLevel = st.selectbox('Year Level', options=['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'], index=None)     
+                    yearLevel = st.selectbox('Year Level', options=['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'], index=None)     
                 with col2:
-                        section = st.text_input('Section', value='', key='section', placeholder='Enter Section')
-                        submit_button = st.form_submit_button(label='Check Out Book')
-                        st.markdown('')
+                    section = st.text_input('Section', value='', key='section', placeholder='Enter Section')
+                    submit_button = st.form_submit_button(label='Check Out Book')
 
-                if submit_button:
-                    if not isbn or not student_name or not yearLevel or not section:
-                            st.warning('Please fill out all required fields.')
+            if submit_button:
+                if not isbn or not student_name or not yearLevel or not section:
+                    st.warning('Please fill out all required fields.')
+                else:
+                    df = conn.read(worksheet="Sheet1", dtype={'ISBN': str})
+                    df['ISBN'] = df['ISBN'].str.strip()
+
+                    matching_books = df[df['ISBN'] == isbn.strip()]
+
+                    if len(matching_books) > 0:
+                        book_idx = matching_books.index[0]
+
+                        # Ensure 'Status' column exists before checking availability
+                        if 'Status' not in df.columns:
+                            df['Status'] = 'Active'
+
+                        if df.at[book_idx, 'Status'] == 'Inactive':
+                            st.error('This book is currently unavailable for checkout.')
+                            st.stop()
+
+                        # Ensure required columns exist
+                        for col in ['Patron', 'Check Out Dates', 'Year Level', 'Section', 'Due']:
+                            if col not in df.columns:
+                                df[col] = ''
+
+                        formatted_date = checkout_date.strftime('%Y-%m-%d')
+                        due_date = checkout_date + pd.Timedelta(days=3)
+                        formatted_due_date = due_date.strftime('%Y-%m-%d')
+
+                        # Update values in Google Sheets
+                        df.at[book_idx, 'Patron'] = student_name if df.at[book_idx, 'Patron'] == '' else f"{df.at[book_idx, 'Patron']}, {student_name}"
+                        df.at[book_idx, 'Check Out Dates'] = formatted_date if df.at[book_idx, 'Check Out Dates'] == '' else f"{df.at[book_idx, 'Check Out Dates']}, {formatted_date}"
+                        df.at[book_idx, 'Year Level'] = yearLevel if df.at[book_idx, 'Year Level'] == '' else f"{df.at[book_idx, 'Year Level']}, {yearLevel}"
+                        df.at[book_idx, 'Section'] = section if df.at[book_idx, 'Section'] == '' else f"{df.at[book_idx, 'Section']}, {section}"
+                        df.at[book_idx, 'Due'] = formatted_due_date if df.at[book_idx, 'Due'] == '' else f"{df.at[book_idx, 'Due']}, {formatted_due_date}"
+
+                        # Write updated data to Google Sheets (Sheet1)
+                        conn.update(worksheet="Sheet1", data=df)
+
+                        st.success('Book has been checked out successfully.')
+                        log_transaction('Check Out', isbn, student_name, yearLevel, section)
+
                     else:
-                        if os.path.exists('Database.xlsx'):
-                            df = pd.read_excel('Database.xlsx', dtype={'ISBN': str})
-                            df['ISBN'] = df['ISBN'].str.strip()
-                                
-                            matching_books = df[df['ISBN'] == isbn.strip()]
-                                
-                            if len(matching_books) > 0:
-                                book_idx = matching_books.index[0]
-                                    
-                                df = update_book_status(df)
-                                if df.at[book_idx, 'Status'] == 'Inactive':
-                                        st.error('This book is currently unavailable for checkout.')
-                                        st.stop()
-                                    
-                                for col in ['Patron', 'Check Out Dates', 'Year Level', 'Section', 'Status']:
-                                        if col not in df.columns:
-                                            df[col] = ''
+                        st.error('Book not found in inventory.')
 
-
-                                formatted_date = checkout_date.strftime('%Y-%m-%d')
-                                    
-                                current_patron = str(df.at[book_idx, 'Patron']) if pd.notna(df.at[book_idx, 'Patron']) else ''
-                                current_dates = str(df.at[book_idx, 'Check Out Dates']) if pd.notna(df.at[book_idx, 'Check Out Dates']) else ''
-                                current_year = str(df.at[book_idx, 'Year Level']) if pd.notna(df.at[book_idx, 'Year Level']) else ''
-                                current_section = str(df.at[book_idx, 'Section']) if pd.notna(df.at[book_idx, 'Section']) else ''
-
-                                due_date = checkout_date + pd.Timedelta(days=3)
-                                formatted_due_date = due_date.strftime('%Y-%m-%d')
-                                    
-                                if current_patron == '':
-                                        df.at[book_idx, 'Patron'] = student_name
-                                        df.at[book_idx, 'Check Out Dates'] = formatted_date
-                                        df.at[book_idx, 'Year Level'] = yearLevel
-                                        df.at[book_idx, 'Section'] = section
-                                        df.at[book_idx, 'Due'] = formatted_due_date
-                                else:
-                                        df.at[book_idx, 'Patron'] = f"{current_patron}, {student_name}"
-                                        df.at[book_idx, 'Check Out Dates'] = f"{current_dates}, {formatted_date}"
-                                        df.at[book_idx, 'Year Level'] = f"{current_year}, {yearLevel}"
-                                        df.at[book_idx, 'Section'] = f"{current_section}, {section}"
-                                        df.at[book_idx, 'Due'] = f"{df.at[book_idx, 'Due Date']}, {formatted_due_date}"
-                                    
-                                df = update_book_status(df)
-                                df.to_excel('Database.xlsx', index=False)
-                                st.success('Book has been checked out successfully.')
-                                log_transaction('Check Out', isbn, student_name, yearLevel, section)
-            
-
-
-                            else:
-                                st.error('Book not found in inventory.')
-                        else:
-                            st.error('Inventory database not found.')
 
 
         #-------------------------------------------------------- CHECK IN ---------------------------------------------------------------------
         if selected == 'Check In':
             st.subheader('Search Book to Check In')
             search_term = st.text_input('Search by ISBN', value='', key='search_term', placeholder='Enter ISBN')
-            
+
             if search_term:
-                if os.path.exists('Database.xlsx'):
-                    df = pd.read_excel('Database.xlsx')
-                            
-                    search_results = df[df.apply(
-                            lambda row: search_term.lower() in str(row['ISBN']).lower(), axis=1
-                        )]
-                            
-                    if not search_results.empty:
-                            st.dataframe(search_results[['Book Title', 'Author', 'ISBN', 'Type', 'Category', 'Publishing Date', 'Publisher', 'Patron','Due']],
-                                         use_container_width=True)
-                        
-                    else:
-                        st.warning('No matching records found.')
+                df = conn.read(worksheet="Sheet1")  # Read from Google Sheets
+                
+                # Ensure ISBN is string, remove spaces, and strip non-numeric characters
+                df['ISBN'] = df['ISBN'].astype(str).str.strip().str.replace(r'[^0-9Xx]', '', regex=True)
+                search_term = str(search_term).strip().replace('-', '').replace(' ', '')
+
+                search_results = df[df['ISBN'].str.contains(search_term, case=False, na=False)]
+
+                if not search_results.empty:
+                    st.dataframe(search_results[['Book Title', 'Author', 'ISBN', 'Type', 'Category', 'Publishing Date', 'Publisher', 'Patron', 'Due']],
+                                use_container_width=True)
                 else:
-                    st.warning('No inventory data found.')
+                    st.warning('No matching records found.')
+
             st.markdown("---")
+
             with st.form(key='check_in_form'):
                 st.markdown(
-                        """
-                        <style>
-                            @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
-                            .check-in-form-title {
-                                font-family: 'Poppins', sans-serif;
-                                font-size: 28px;
-                                color: #2a2a2a;
-                                text-align: center;
-                            }
-                        </style>
-                        <h1 class="check-in-form-title">Check In Book</h1>
-                        <p style="text-align: center;">Fill out the form to return a book.</p>
-                        """, 
-                        unsafe_allow_html=True
-                    )
-                    
+                    """
+                    <h1 style="font-family: Poppins, sans-serif; font-size: 28px; text-align: center;">Check In Book</h1>
+                    <p style="text-align: center;">Fill out the form to return a book.</p>
+                    """,
+                    unsafe_allow_html=True
+                )
+
                 isbn = create_scanner_input('checkin_isbn')
                 date = st.date_input('Date', value=dt.today())
                 date = date.strftime('%Y-%m-%d')
+
                 col1, col2 = st.columns(2)
                 with col1:
-                        yearLevel = st.selectbox('Year Level', options=['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'], index=None)
-
+                    yearLevel = st.selectbox('Year Level', options=['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'], index=None)
                 with col2:
-                        section = st.text_input('Section', value='', key='section', placeholder='Enter Section')
-                        submit_button = st.form_submit_button(label='Return Book')
-                        st.markdown('')
+                    section = st.text_input('Section', value='', key='section', placeholder='Enter Section')
+                    submit_button = st.form_submit_button(label='Return Book')
 
-                if submit_button:
-                    if not isbn or not yearLevel or not section:
-                            st.warning('Please fill out all required fields.')
-                    else:
-                        if os.path.exists('Database.xlsx'):
-                            df = pd.read_excel('Database.xlsx', dtype={'ISBN': str})
-                            df['ISBN'] = df['ISBN'].str.strip()
-                                
-                            matching_books = df[df['ISBN'] == isbn.strip()]
-                                
-                            if len(matching_books) > 0:
-                                book_idx = matching_books.index[0]
-                                    
-                                patron_list = str(df.at[book_idx, 'Patron']) if pd.notna(df.at[book_idx, 'Patron']) else ''
-                                checkout_list = str(df.at[book_idx, 'Check Out Dates']) if pd.notna(df.at[book_idx, 'Check Out Dates']) else ''
-                                year_list = str(df.at[book_idx, 'Year Level']) if pd.notna(df.at[book_idx, 'Year Level']) else ''
-                                section_list = str(df.at[book_idx, 'Section']) if pd.notna(df.at[book_idx, 'Section']) else ''
-                                due_date_list = str(df.at[book_idx, 'Due']) if pd.notna(df.at[book_idx, 'Due']) else ''  
-                                    
-                                if patron_list:
-                                    patrons = [p.strip() for p in patron_list.split(',')]
-                                    checkouts = [d.strip() for d in checkout_list.split(',')]
-                                    years = [y.strip() for y in year_list.split(',')] if year_list else []
-                                    sections = [s.strip() for s in section_list.split(',')] if section_list else []
-                                    due_dates = [d.strip() for d in due_date_list.split(',')] if due_date_list else [] 
-                                        
-                                    student_name = patrons.pop(0)  # Automatically select the first patron
-                                    checkouts.pop(0)
-                                    due_dates.pop(0)
-                                    if years:
-                                        years.pop(0)
-                                    if sections:
-                                        sections.pop(0)
-                                    
-                                    df.at[book_idx, 'Patron'] = ', '.join(patrons) if patrons else ''
-                                    df.at[book_idx, 'Check Out Dates'] = ', '.join(checkouts) if checkouts else ''
-                                    df.at[book_idx, 'Year Level'] = ', '.join(years) if years else ''
-                                    df.at[book_idx, 'Section'] = ', '.join(sections) if sections else ''
-                                    df.at[book_idx, 'Due'] = ', '.join(due_dates) if due_dates else ''
-                                    
-                                    # Update status after modifying data
-                                    df = update_book_status(df)
-                                    df.to_excel('Database.xlsx', index=False)
-                                    st.success(f'Book has been checked in successfully for {student_name}.')
-                                    log_transaction('Check In', isbn, student_name, yearLevel, section)
-                                else:
-                                    st.error('No patron found for this book.')
-                            else:
-                                st.error('Book not found in inventory.')
+            if submit_button:
+                if not isbn or not yearLevel or not section:
+                    st.warning('Please fill out all required fields.')
+                else:
+                    df = conn.read(worksheet="Sheet1", dtype={'ISBN': str})
+                    df['ISBN'] = df['ISBN'].str.strip()
+
+                    matching_books = df[df['ISBN'] == isbn.strip()]
+
+                    if len(matching_books) > 0:
+                        book_idx = matching_books.index[0]
+
+                        patron_list = str(df.at[book_idx, 'Patron']) if pd.notna(df.at[book_idx, 'Patron']) else ''
+                        checkout_list = str(df.at[book_idx, 'Check Out Dates']) if pd.notna(df.at[book_idx, 'Check Out Dates']) else ''
+                        year_list = str(df.at[book_idx, 'Year Level']) if pd.notna(df.at[book_idx, 'Year Level']) else ''
+                        section_list = str(df.at[book_idx, 'Section']) if pd.notna(df.at[book_idx, 'Section']) else ''
+                        due_date_list = str(df.at[book_idx, 'Due']) if pd.notna(df.at[book_idx, 'Due']) else ''  
+
+                        if patron_list:
+                            patrons = [p.strip() for p in patron_list.split(',')]
+                            checkouts = [d.strip() for d in checkout_list.split(',')]
+                            years = [y.strip() for y in year_list.split(',')] if year_list else []
+                            sections = [s.strip() for s in section_list.split(',')] if section_list else []
+                            due_dates = [d.strip() for d in due_date_list.split(',')] if due_date_list else [] 
+
+                            student_name = patrons.pop(0)  # Automatically select the first patron
+                            checkouts.pop(0)
+                            due_dates.pop(0)
+                            if years:
+                                years.pop(0)
+                            if sections:
+                                sections.pop(0)
+
+                            df.at[book_idx, 'Patron'] = ', '.join(patrons) if patrons else ''
+                            df.at[book_idx, 'Check Out Dates'] = ', '.join(checkouts) if checkouts else ''
+                            df.at[book_idx, 'Year Level'] = ', '.join(years) if years else ''
+                            df.at[book_idx, 'Section'] = ', '.join(sections) if sections else ''
+                            df.at[book_idx, 'Due'] = ', '.join(due_dates) if due_dates else ''
+
+                            # Update book status after check-in
+                            df = update_book_status(df)
+                            conn.update(worksheet="Sheet1", data=df)  # Write back to Google Sheets
+
+                            st.success(f'Book has been checked in successfully for {student_name}.')
+                            log_transaction('Check In', isbn, student_name, yearLevel, section)
                         else:
-                            st.error('Inventory database not found.')
+                            st.error('No patron found for this book.')
+                    else:
+                        st.error('Book not found in inventory.')
+
 
 
 
@@ -1096,7 +1072,7 @@ if check_password():
 
         if selected == 'Record':
 
-            record_data = pd.read_excel('Database.xlsx')
+            record_data = load_inventory()
             total_books = int(record_data['Quantity'].sum()) 
             borrow_books = int(record_data['Check Out Dates'].apply(count_borrowed_books).sum())  
             available_books = total_books - borrow_books
@@ -1210,7 +1186,7 @@ if check_password():
 
             with tab[0]:
 
-                inventory_data = pd.read_excel('Database.xlsx')
+                inventory_data = load_inventory()
 
                 col1, col2 = st.columns(2)
                 with col1:
@@ -1250,9 +1226,8 @@ if check_password():
 
 
             with tab[1]:
-                # Load transaction and book data with ISBN as a string
-                transaction_data = pd.read_excel('Transaction.xlsx', dtype={'ISBN': str})
-                book_data = pd.read_excel('Database.xlsx', dtype={'ISBN': str})
+                transaction_data = load_transaction()
+                book_data = load_inventory()
 
                 # Strip spaces and ensure ISBN remains consistent
                 transaction_data['ISBN'] = transaction_data['ISBN'].astype(str).str.strip()
