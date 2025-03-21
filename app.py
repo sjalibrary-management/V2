@@ -408,7 +408,7 @@ if check_password():
     
 
     def dashboard():
-        st.sidebar.image("images/logo.png")           
+        st.sidebar.image("images/logo_f.png")           
         with st.sidebar:
             selected = option_menu(
                 menu_title=None, 
