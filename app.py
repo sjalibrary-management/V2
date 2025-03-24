@@ -768,7 +768,7 @@ if check_password():
                                 st.success(f'Updated quantity for existing book. New total: {book_data["Quantity"]}')
                             else:
                                 st.success('New item has been added successfully!')
-                            st.rerun()
+                            st.experimental_rerun()
 
 
                 
